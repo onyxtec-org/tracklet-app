@@ -1,0 +1,10 @@
+{
+  "menu": [
+    {
+      "url": "home",
+      "name": "Home",
+      "icon": "home",
+      "slug": "home"
+    }
+  ]
+}
