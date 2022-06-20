@@ -1,5 +1,4 @@
 # boilerplate
-This repo contains a boilerplate for future projects with spatie and authentication already setup
 Clone Project:
 1- Composer Update.
 2- Copy .env.example file to .env on the root folder.
