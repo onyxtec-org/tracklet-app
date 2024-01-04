@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
     public function index()
     {
-         return view('profile');
+        $intent = User::find(auth()->id())->createSetupIntent();
+         return view('profile',compact('intent'));
     }
     public function updatePasswordProfile(Request $request)
     {

@@ -16,7 +16,7 @@
 <!-- account setting page -->
 <section id="page-account-settings">
     @php
-    $user = auth()->user();
+        $user = auth()->user();
     @endphp
     <div class="row">
         <!-- left menu section -->
@@ -36,6 +36,13 @@
                         aria-expanded="false">
                         <i data-feather="lock" class="font-medium-3 mr-1"></i>
                         <span class="font-weight-bold">Change Password</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="account-pill-add-card-details" data-toggle="pill" href="#account-vertical-add-card-details"
+                        aria-expanded="false">
+                        <i data-feather="credit-card" class="font-medium-3 mr-1"></i>
+                        <span class="font-weight-bold">Add Card Details</span>
                     </a>
                 </li>
                 <!-- information -->
@@ -171,6 +178,44 @@
                             <!--/ form -->
                         </div>
                         <!--/ change password -->
+
+                        <div class="tab-pane fade" id="account-vertical-add-card-details" role="tabpanel"
+                            aria-labelledby="account-pill-add-card-details" aria-expanded="false">
+                            <!-- form -->
+                            <form class="jquery-val-form mt-2" method="POST"
+                                action="{{ route('addPaymentMethod') }}" id="paymentForm">
+                                @csrf
+                                <div class="row">
+                                    <div class="col-lg-10 col-sm-12">
+                                        <div class="form-group">
+                                            <div class="form-row">
+                                                <div class="form-group col">
+                                                    <label>Card Holder's Name</label>
+                                                    <input type="text" class="form-control" name="cardHoldersName" id="card-holder-name" value="{{$user->name}}"/>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group col">
+                                                    <label>Credit or debit card</label>
+                                                    <div id="card-element">
+                                                        <!-- A Stripe Element will be inserted here. -->
+                                                    </div>
+                                                    <div class="text-danger mt-2" id="card-errors" role="alert"></div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="payment_method" id="payment-method">
+                                            <div class="form-row my-2">
+                                                <div class="form-group col">
+                                                    <button class="btn btn-primary mr-1 mt-1" id="card-button" type="submit"
+                                                        data-secret="{{ $intent->client_secret }}">Add Card Details</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <!--/ form -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -229,4 +274,74 @@
         });
 </script>
 
+<script type="text/javascript">
+    var publickey = @json(env('STRIPE_KEY'));
+</script>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripe = Stripe(publickey); // Initialize Stripe with your public key
+    
+    // Create a Stripe card Element
+    const elements = stripe.elements();
+    const cardElement = elements.create('card');
+    cardElement.mount('#card-element'); // Mount the card element to the specified div
+    
+    // Get required elements
+    const cardHolderName = document.getElementById('card-holder-name');
+    const cardButton = document.getElementById('card-button');
+    const clientSecret = cardButton.dataset.secret; // Get the client secret from the button data attribute
+    
+    var form = document.getElementById('paymentForm'); // Get the payment form element
+    
+    // Add form submission event listener
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent default form submission
+        
+        // Disable the submit button and show processing text
+        $("#card-button").attr("disabled", true);
+        $("#card-button").html('Processing <span class="spinner-border spinner-border-sm text-light ml-2" role="status" aria-hidden="true"></span>');
+        
+        // Confirm the card setup with Stripe
+        const { setupIntent, error } = await stripe.confirmCardSetup(
+            clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: { name: cardHolderName.value }
+                }
+            }
+        );
+        
+        if (error) {
+            // Handle any errors during card setup
+            var errorElement = document.getElementById('card-errors');
+            errorElement.textContent = error.message;
+            $("#card-button").removeAttr("disabled");
+            $("#card-button").html('Add Card Details'); // Set button text back to its original state if there's an error
+        } else {
+            // Payment method successfully verified
+            
+            // Create a hidden input to store the payment method ID
+            var hiddenInput = document.createElement('input');
+            hiddenInput.setAttribute('type', 'hidden');
+            hiddenInput.setAttribute('name', 'payment_method');
+            hiddenInput.setAttribute('value', setupIntent.payment_method);
+            
+            // Append the hidden input to the form
+            form.appendChild(hiddenInput);
+            
+            // Submit the form
+            form.submit();
+        }
+    });
+    
+    // Handle real-time validation errors from the card Element.
+    cardElement.addEventListener('change', function (event) {
+        var displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    });
+</script>
 @endsection

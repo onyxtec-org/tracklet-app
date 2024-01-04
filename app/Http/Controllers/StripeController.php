@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Contracts\BillingRepositoryInterface;
+use APP\Models\User;
 
 class StripeController extends Controller
 {
@@ -15,22 +16,28 @@ class StripeController extends Controller
 
     public function createCustomer(Request $request) {
         // Note: Data may come from various sources, not necessarily from a form.
-        $this->billingRepository->createStripeCustomer($request->all());
+        $this->billingRepository->createCustomer($request->all());
         // Additional logic
     }
 
     public function addPaymentMethod(Request $request) {
-
         $request->validate([
-            'customer_id' => 'required',
-            'payment_method_token' => 'required',
+            'cardHoldersName' => 'required',
+            'payment_method' => 'required',
         ]);
 
-        $customerId = $request->input('customer_id'); // Get customer ID from request or elsewhere
-        $paymentMethodToken = $request->input('payment_method_token'); // Get payment method token from request or elsewhere
+        $user = User::find(auth()->id());
+        $paymentMethodId = $request->input('payment_method');
+        $cardholderName = $request->input('payment_method');
+
+        $data = [
+            'user' => $user,
+            'paymentMethodId' => $paymentMethodId,
+            'cardholderName' => $cardholderName
+        ];
 
         // Use the billingRepository to add the payment method
-        $result = $this->billingRepository->addStripePaymentMethod($customerId, $paymentMethodToken);
+        $result = $this->billingRepository->addPaymentMethod($data);
 
         // Check the result and return a response
         if ($result['success']) {

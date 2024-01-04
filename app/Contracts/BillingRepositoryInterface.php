@@ -3,6 +3,6 @@
 namespace App\Contracts;
 
 interface BillingRepositoryInterface {
-    public function createStripeCustomer($data);
-    public function addStripePaymentMethod($customerId, $paymentMethodTo);
+    public function createCustomer($data);
+    public function addPaymentMethod($data);
 }

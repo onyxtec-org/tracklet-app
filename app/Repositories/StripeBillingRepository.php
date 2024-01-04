@@ -16,33 +16,40 @@ class StripeBillingRepository implements BillingRepositoryInterface {
         Stripe::setApiKey($stripeApiKey);
     }
 
-    public function createStripeCustomer($data) {
+    public function createCustomer($data) {
         $user = User::create($data->except('_token'));
         $user->createAsStripeCustomer();
     }
 
-    public function addStripePaymentMethod($customerId, $paymentMethodToken) {
+    public function addPaymentMethod($data) {
         try {
-            // Retrieve the customer from Stripe
-            $customer = Customer::retrieve($customerId);
-
-            // Attach the payment method to the customer
-            $paymentMethod = PaymentMethod::retrieve($paymentMethodToken);
-            $paymentMethod->attach(['customer' => $customer->id]);
-
-            // Set the default payment method if needed
-            $customer->invoice_settings->default_payment_method = $paymentMethod->id;
-            $customer->save();
-
+            // Create or get the Stripe customer
+            $data['user']->createOrGetStripeCustomer();
+        
+            // Attach the payment method to the customer (user)
+            $data['user']->addPaymentMethod($data['paymentMethodId']);
+        
+            // Set the payment method as the default for the customer
+            $data['user']->updateDefaultPaymentMethod($data['paymentMethodId']);
+        
+            // Retrieve the default payment method from Stripe
+            $stripePaymentMethodId = $data['user']->defaultPaymentMethod()->id;
+            $stripePaymentMethod = PaymentMethod::retrieve($stripePaymentMethodId);
+            $stripePaymentMethod->attach(['customer' => $data['user']->stripe_id]);
+        
+            // Update the billing details
+            $stripePaymentMethod->billing_details = ['name' => $data['cardholderName']];
+            $stripePaymentMethod->save();
+        
             // Handle success and return a response
             return [
                 'success' => true,
-                'message' => 'Payment method added successfully.',
+                'message' => 'Payment method added and updated successfully.',
             ];
         } catch (\Exception $e) {
             // Handle errors and return an error response
             Log::channel('stripeLog')->error('Something went wrong => : '.$e->getMessage());
-
+        
             return [
                 'success' => false,
                 'message' => 'Something went wrong!',
