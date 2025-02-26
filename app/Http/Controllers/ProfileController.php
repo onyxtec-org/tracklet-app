@@ -10,8 +10,7 @@ class ProfileController extends Controller
 {
     public function index()
     {
-        $intent = User::find(auth()->id())->createSetupIntent();
-         return view('profile',compact('intent'));
+        return view('profile');
     }
     public function updatePasswordProfile(Request $request)
     {

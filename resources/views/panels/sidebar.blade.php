@@ -28,7 +28,7 @@ $configData = Helper::applClasses();
                 </g>
               </g>
             </svg></span>
-          <h2 class="brand-text">Vuexy</h2>
+          <h2 class="brand-text">TruView</h2>
         </a></li>
       <li class="nav-item nav-toggle"><a class="nav-link modern-nav-toggle pr-0" data-toggle="collapse"><i class="d-block d-xl-none text-primary toggle-icon font-medium-4" data-feather="x"></i><i class="d-none d-xl-block collapse-toggle-icon font-medium-4  text-primary" data-feather="disc" data-ticon="disc"></i></a></li>
     </ul>
@@ -45,6 +45,23 @@ $configData = Helper::applClasses();
         <i data-feather="more-horizontal"></i>
       </li>
       @else
+      {{-- Role-based visibility --}}
+      @php
+      $showMenu = false;
+      $user = auth()->user();
+
+      if ($menu->slug === 'dashboard.index') {
+      $showMenu = true; // Dashboard is visible to everyone
+      } elseif ($user) {
+      if ($user->hasRole('admin')) {
+      $showMenu = true; // Admin can see everything
+      } elseif ($user->hasRole('user') && $menu->slug === 'device.index') {
+      $showMenu = true; // Users can see only Device Request
+      }
+      }
+      @endphp
+
+      @if($showMenu)
       {{-- Add Custom Class with nav-item --}}
       @php
       $custom_classes = "";
@@ -53,18 +70,19 @@ $configData = Helper::applClasses();
       }
       @endphp
       <li class="nav-item {{ Route::currentRouteName() === $menu->slug ? 'active' : '' }} {{ $custom_classes }}">
-        <a href="{{isset($menu->url)? url($menu->url):'javascript:void(0)'}}" class="d-flex align-items-center" target="{{isset($menu->newTab) ? '_blank':'_self'}}">
+        <a href="{{ isset($menu->url) ? url($menu->url) : 'javascript:void(0)' }}" class="d-flex align-items-center" target="{{ isset($menu->newTab) ? '_blank' : '_self' }}">
           <i data-feather="{{ $menu->icon }}"></i>
           <span class="menu-title text-truncate">{{ __('locale.'.$menu->name) }}</span>
           @if (isset($menu->badge))
           <?php $badgeClasses = "badge badge-pill badge-light-primary ml-auto mr-1" ?>
-          <span class="{{ isset($menu->badgeClass) ? $menu->badgeClass : $badgeClasses }} ">{{$menu->badge}}</span>
+          <span class="{{ isset($menu->badgeClass) ? $menu->badgeClass : $badgeClasses }}">{{$menu->badge}}</span>
           @endif
         </a>
         @if(isset($menu->submenu))
         @include('panels/submenu', ['menu' => $menu->submenu])
         @endif
       </li>
+      @endif
       @endif
       @endforeach
       @endif

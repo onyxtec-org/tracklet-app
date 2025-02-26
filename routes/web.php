@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StripeController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DeviceRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +27,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile/password', [ProfileController::class, 'updatePasswordProfile'])->name('password.profile.update');
 
-    // Stripe routes
-    Route::post('/stripe/create/customer',[StripeController::class,'createCustomer'])->name('stripe.create.customer');
-    Route::post('/stripe/add-payment-method', [StripeController::class,'addPaymentMethod'])->name('addPaymentMethod');
+    Route::get('/device-request', [DeviceRequestController::class, 'index'])->name('device.request.index');
+    Route::post('/device-request/store', [DeviceRequestController::class, 'store'])->name('device.request.store');
+    Route::get('/device-requests', [DeviceRequestController::class, 'list'])->name('device.requests.list');
 });

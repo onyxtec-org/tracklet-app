@@ -1,10 +1,16 @@
 {
   "menu": [
     {
-      "url": "/",
-      "name": "Dashboard",
-      "icon": "home",
-      "slug": "dashboard.index"
+      "url": "/device-request",
+      "name": "Device Request",
+      "icon": "file-plus",
+      "slug": "device.index"
+    },
+    {
+      "url": "/device-requests",
+      "name": "List",
+      "icon": "list",
+      "slug": "device.list"
     }
   ]
 }
