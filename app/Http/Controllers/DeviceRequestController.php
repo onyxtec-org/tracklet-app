@@ -6,6 +6,8 @@ use App\Models\Device;
 use App\Models\ShippingAddress;
 use App\Models\DeviceRequest;
 use App\Http\Requests\StoreDeviceRequest;
+use App\Mail\DeviceRequestSubmitted;
+use Illuminate\Support\Facades\Mail;
 
 class DeviceRequestController extends Controller
 {
@@ -19,14 +21,17 @@ class DeviceRequestController extends Controller
 
     public function store(StoreDeviceRequest $request)
     {
-        DeviceRequest::create($request->validated());
-
+        $deviceRequest = DeviceRequest::create($request->validated());
+        Mail::to($deviceRequest->email)->queue(new DeviceRequestSubmitted($deviceRequest));
         return redirect()->back()->with('success', 'Device request submitted successfully!');
     }
 
     public function list()
     {
-        $deviceRequests = DeviceRequest::with(['device', 'deviceVersion', 'primaryColor', 'secondaryColor', 'shippingAddress'])->get();
-        return view('device_requests.list', compact('deviceRequests'));
+        if (request()->ajax()) {
+            $deviceRequests = DeviceRequest::with(['device', 'deviceVersion', 'primaryColor', 'secondaryColor', 'shippingAddress'])->get();
+            return ['data' => $deviceRequests];
+        }
+        return view('device_requests.list');
     }
 }

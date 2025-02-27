@@ -1,6 +1,7 @@
 @extends('layouts.contentLayoutMaster')
 
-@section('title', 'Device Requests')
+@section('title', 'Shipping Addresses')
+
 @section('vendor-style')
 {{-- Vendor Css files --}}
 <link rel="stylesheet" href="{{ asset(mix('vendors/css/tables/datatable/dataTables.bootstrap4.min.css')) }}">
@@ -8,27 +9,20 @@
 <link rel="stylesheet" href="{{ asset(mix('vendors/css/tables/datatable/buttons.bootstrap4.min.css')) }}">
 <link rel="stylesheet" href="{{ asset(mix('vendors/css/tables/datatable/rowGroup.bootstrap4.min.css')) }}">
 @endsection
+
 @section('content')
 <div class="card">
-    <div class="card-header">
-        <h4 class="card-title">Device Requests</h4>
-        <a href="{{ route('device.request.index') }}" class="btn btn-primary">Create a Request</a>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="card-title">Shipping Addresses</h4>
+        <a href="{{ route('shipping.create') }}" class="btn btn-primary">Add New Address</a>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table device-requests-table" id="device-requests-table">
+            <table class="table shipping-address-table" id="shipping-address-table">
                 <thead class="thead-light">
                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>Device</th>
-                        <th>Version</th>
-                        <th>Primary Color</th>
-                        <th>Secondary Color</th>
-                        <th>Shipping Address</th>
-                        <th>Shipping Attention</th>
-                        <th>Caller ID Requested</th>
+                        <th>ID</th>
+                        <th>Address</th>
                         <th>Created At</th>
                     </tr>
                 </thead>
@@ -37,8 +31,8 @@
     </div>
 </div>
 @endsection
+
 @section('vendor-script')
-{{-- Vendor js files --}}
 <script src="{{ asset(mix('vendors/js/tables/datatable/jquery.dataTables.min.js')) }}"></script>
 <script src="{{ asset(mix('vendors/js/tables/datatable/datatables.bootstrap4.min.js')) }}"></script>
 <script src="{{ asset(mix('vendors/js/tables/datatable/dataTables.responsive.min.js')) }}"></script>
@@ -54,5 +48,5 @@
 @endsection
 
 @section('page-script')
-<script src="{{ asset(mix('js/scripts/pages/device-requests.js')) }}"></script>
+<script src="{{ asset(mix('js/scripts/pages/shipping-addresses.js')) }}"></script>
 @endsection

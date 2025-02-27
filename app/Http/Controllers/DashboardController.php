@@ -11,9 +11,9 @@ class DashboardController extends Controller
         $user = auth()->user();
 
         if ($user) {
-            if ($user->hasRole('admin')) {
+            if ($user->hasRole(config('truview.roles.Admin'))) {
                 return redirect()->route('device.requests.list');
-            } elseif ($user->hasRole('user')) {
+            } elseif ($user->hasRole(config('truview.roles.User'))) {
                 return redirect()->route('device.request.index');
             }
         }

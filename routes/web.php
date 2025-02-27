@@ -2,10 +2,11 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\StripeController;
+use App\Http\Controllers\DeviceController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DeviceRequestController;
+use App\Http\Controllers\ShippingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,4 +31,10 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/device-request', [DeviceRequestController::class, 'index'])->name('device.request.index');
     Route::post('/device-request/store', [DeviceRequestController::class, 'store'])->name('device.request.store');
     Route::get('/device-requests', [DeviceRequestController::class, 'list'])->name('device.requests.list');
+    Route::get('/add-device', [DeviceController::class, 'create'])->name('device.create');
+    Route::post('/add-device', [DeviceController::class, 'store'])->name('device.store');
+    Route::get('/shipping/create', [ShippingController::class, 'create'])->name('shipping.create');
+    Route::post('/shipping/store', [ShippingController::class, 'store'])->name('shipping.store');
+    Route::get('/shipping-addresses', [ShippingController::class, 'list'])->name('shipping.addresses.list');
+    Route::get('/devices', [DeviceController::class, 'list'])->name('devices.list');
 });

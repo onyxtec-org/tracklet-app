@@ -23,7 +23,7 @@ class StoreDeviceRequest extends FormRequest
             'secondary_color_id' => 'required|exists:colors,id|different:primary_color_id',
             'shipping_address_id' => 'required|exists:shipping_addresses,id',
             'shipping_attention' => 'required|string|max:255',
-            'caller_id_requested' => 'required|string|max:255',
+            'caller_id_requested' => 'nullable|string|max:255',
         ];
     }
 
@@ -40,7 +40,6 @@ class StoreDeviceRequest extends FormRequest
             'secondary_color_id.required' => 'Please select a Secondary Color.',
             'secondary_color_id.different' => 'Secondary Color must be different from Primary Color.',
             'shipping_address_id.required' => 'Please select a Shipping Address.',
-            'caller_id_requested.required' => 'Please enter caller id.',
             'shipping_attention.required' => 'Please enter any shipping attentions.',
         ];
     }

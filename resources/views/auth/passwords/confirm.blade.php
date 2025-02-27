@@ -38,10 +38,10 @@
               </g>
             </g>
           </svg>
-          <h2 class="brand-text text-primary ml-1">TrueView</h2>
+          <h2 class="brand-text text-primary ml-1">TruView</h2>
         </a>
 
-        <h4 class="card-title mb-1">Welcome to TrueView! 👋</h4>
+        <h4 class="card-title mb-1">Welcome to TruView! 👋</h4>
         <p class="card-text mb-2">Please confirm your password before continuing.</p>
 
         <form class="auth-login-form mt-2" method="POST" action="{{ route('password.confirm') }}">

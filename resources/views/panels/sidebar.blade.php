@@ -50,13 +50,13 @@ $configData = Helper::applClasses();
       $showMenu = false;
       $user = auth()->user();
 
-      if ($menu->slug === 'dashboard.index') {
-      $showMenu = true; // Dashboard is visible to everyone
-      } elseif ($user) {
-      if ($user->hasRole('admin')) {
-      $showMenu = true; // Admin can see everything
-      } elseif ($user->hasRole('user') && $menu->slug === 'device.index') {
-      $showMenu = true; // Users can see only Device Request
+      if ($user) {
+      if ($user->hasRole(config('truview.roles.Admin'))) {
+      // Admin can see everything except 'device.requests.create'
+      $showMenu = $menu->slug !== 'device.requests.create';
+      } elseif ($user->hasRole(config('truview.roles.User'))) {
+      // User can only see 'device.requests.create'
+      $showMenu = $menu->slug === 'device.requests.create';
       }
       }
       @endphp
@@ -69,7 +69,7 @@ $configData = Helper::applClasses();
       $custom_classes = $menu->classlist;
       }
       @endphp
-      <li class="nav-item {{ Route::currentRouteName() === $menu->slug ? 'active' : '' }} {{ $custom_classes }}">
+      <li class="nav-item {{ request()->routeIs($menu->slug.'*') ? 'active' : '' }} {{ $custom_classes }}">
         <a href="{{ isset($menu->url) ? url($menu->url) : 'javascript:void(0)' }}" class="d-flex align-items-center" target="{{ isset($menu->newTab) ? '_blank' : '_self' }}">
           <i data-feather="{{ $menu->icon }}"></i>
           <span class="menu-title text-truncate">{{ __('locale.'.$menu->name) }}</span>

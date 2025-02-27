@@ -4,11 +4,23 @@
       "url": "/device-request",
       "name": "Device Request",
       "icon": "file-plus",
-      "slug": "device.index"
+      "slug": "device.requests.create"
     },
     {
       "url": "/device-requests",
-      "name": "List",
+      "name": "Device Requests",
+      "icon": "list",
+      "slug": "device.requests.list"
+    },
+    {
+      "url": "/shipping-addresses",
+      "name": "Shipping Addresses",
+      "icon": "list",
+      "slug": "shipping.list"
+    },
+    {
+      "url": "/devices",
+      "name": "Devices",
       "icon": "list",
       "slug": "device.list"
     }
