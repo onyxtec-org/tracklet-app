@@ -3,17 +3,7 @@
 @section('title', 'Device Request')
 
 @section('content')
-@if (session('success'))
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <div class="alert-body">
-        <i data-feather="check" class="mr-50 align-middle"></i>
-        <span>{{ session('success') }}</span>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-</div>
-@endif
+@include('panels.response')
 <div class="card">
 
     <div class="card-header">
@@ -101,6 +91,7 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold d-block">Shipping Address</label>
                     <select name="shipping_address_id" class="form-control">
+                        <option value="">Select Shipping Address</option>
                         @foreach ($shippingAddresses as $address)
                         <option value="{{ $address->id }}">{{ $address->address }}</option>
                         @endforeach

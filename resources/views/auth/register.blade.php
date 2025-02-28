@@ -37,7 +37,7 @@
               </g>
             </g>
           </svg>
-          <h2 class="brand-text text-primary ml-1">TrueView</h2>
+          <h2 class="brand-text text-primary ml-1">TruView</h2>
         </a>
 
         <h4 class="card-title mb-1">Adventure starts here 🚀</h4>
@@ -111,24 +111,6 @@
           @endif
         </p>
 
-        <div class="divider my-2">
-          <div class="divider-text">or</div>
-        </div>
-
-        <div class="auth-footer-btn d-flex justify-content-center">
-          <a href="javascript:void(0)" class="btn btn-facebook">
-            <i data-feather="facebook"></i>
-          </a>
-          <a href="javascript:void(0)" class="btn btn-twitter white">
-            <i data-feather="twitter"></i>
-          </a>
-          <a href="javascript:void(0)" class="btn btn-google">
-            <i data-feather="mail"></i>
-          </a>
-          <a href="javascript:void(0)" class="btn btn-github">
-            <i data-feather="github"></i>
-          </a>
-        </div>
       </div>
     </div>
     <!-- /Register v1 -->
