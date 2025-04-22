@@ -29,7 +29,6 @@
                         <th>Shipping Address</th>
                         <th>Shipping Attention</th>
                         <th>Caller ID Requested</th>
-                        <th>Created At</th>
                     </tr>
                 </thead>
             </table>

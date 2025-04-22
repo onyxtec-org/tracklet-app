@@ -20,22 +20,6 @@ $(function () {
                 { data: "shipping_address.address" },
                 { data: "shipping_attention", defaultContent: "-" },
                 { data: "caller_id_requested", defaultContent: "-" },
-                { 
-                    data: "created_at",
-                    render: function (data, type, full, meta) {
-                        let date = new Date(data);
-                        return date.toLocaleString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: true
-                        });
-                    }
-                },
             ],
             columnDefs: [
                 {

@@ -12,7 +12,7 @@
 
             <div class="mb-3">
                 <label class="form-label fw-bold">Device Name</label>
-                <input type="text" name="device_name" class="form-control" required>
+                <input type="text" name="device_name" value="{{ old('device_name') }}" class="form-control" required>
                 @error('device_name')
                     <span class="text-danger">{{ $message }}</span>
                 @enderror
@@ -71,6 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
             colorInput.name = `versions[${versionId}][colors][]`;  // Now colors are inside the same version
             colorInput.classList.add("form-control", "mb-2");
             colorInput.placeholder = "Color";
+            // colorInput.required = true;
             versionCard.querySelector(".colors-container").appendChild(colorInput);
         });
 

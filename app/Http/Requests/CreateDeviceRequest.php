@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class CreateDeviceRequest extends FormRequest
 {
@@ -37,10 +38,22 @@ class CreateDeviceRequest extends FormRequest
             'versions.*.version_name.max' => 'Version name cannot exceed 100 characters.',
 
             'versions.*.colors.array' => 'Colors must be an array.',
-            'versions.*.colors.*.required' => 'Each version must have at least one color.',
+            'versions.*.colors.*.required' => 'Colors are required.',
             'versions.*.colors.*.string' => 'Color name must be a valid string.',
             'versions.*.colors.*.max' => 'Color name cannot exceed 50 characters.',
         ];
     }
-}
 
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $versions = $this->input('versions', []);
+
+            foreach ($versions as $index => $version) {
+                if (empty($version['colors']) || !is_array($version['colors']) || count(array_filter($version['colors'])) === 0) {
+                    $validator->errors()->add("versions.$index.colors", 'Each version must have at least one color.');
+                }
+            }
+        });
+    }
+}
