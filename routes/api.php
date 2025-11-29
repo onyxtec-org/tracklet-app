@@ -82,7 +82,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         ->name('api.subscription.success');
     
     // Super Admin API routes
-    Route::middleware('role:super_admin')->prefix('super-admin')->as('superadmin.')->group(function () {
+    Route::middleware('role:super_admin')->prefix('super-admin')->as('api.superadmin.')->group(function () {
         Route::apiResource('organizations', OrganizationController::class);
         Route::post('organizations/{organization}/resend-invitation', [OrganizationController::class, 'resendInvitation'])
             ->name('organizations.resend-invitation');
@@ -95,7 +95,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
     Route::middleware(['subscribed', 'organization'])->group(function () {
         
         // User Management API (Admin role only)
-        Route::middleware('role:admin')->prefix('users')->as('users.')->group(function () {
+        Route::middleware('role:admin')->prefix('users')->as('api.users.')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
             Route::post('/', [UserController::class, 'store'])->name('store');
             Route::get('{user}', [UserController::class, 'show'])->name('show');
@@ -104,7 +104,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         });
         
         // Expense Tracking API (Finance role)
-        Route::middleware('role_or_permission:admin|finance')->prefix('expenses')->as('expenses.')->group(function () {
+        Route::middleware('role_or_permission:admin|finance')->prefix('expenses')->as('api.expenses.')->group(function () {
             // Categories
             Route::get('categories', [ExpenseCategoryController::class, 'index'])->name('categories.index');
             Route::post('categories', [ExpenseCategoryController::class, 'store'])->name('categories.store');
@@ -123,7 +123,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         });
         
         // Inventory Management API (Admin Support role)
-        Route::middleware('role_or_permission:admin|admin_support')->prefix('inventory')->as('inventory.')->group(function () {
+        Route::middleware('role_or_permission:admin|admin_support')->prefix('inventory')->as('api.inventory.')->group(function () {
             Route::get('items', [InventoryController::class, 'index'])->name('items.index');
             Route::post('items', [InventoryController::class, 'store'])->name('items.store');
             Route::get('items/{inventoryItem}', [InventoryController::class, 'show'])->name('items.show');
@@ -137,7 +137,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         });
         
         // Asset Management API (Admin Support role)
-        Route::middleware('role_or_permission:admin|admin_support')->prefix('assets')->as('assets.')->group(function () {
+        Route::middleware('role_or_permission:admin|admin_support')->prefix('assets')->as('api.assets.')->group(function () {
             Route::get('/', [AssetController::class, 'index'])->name('index');
             Route::post('/', [AssetController::class, 'store'])->name('store');
             Route::get('{asset}', [AssetController::class, 'show'])->name('show');
@@ -147,7 +147,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         });
         
         // Maintenance API (Admin Support role)
-        Route::middleware('role_or_permission:admin|admin_support')->prefix('maintenance')->as('maintenance.')->group(function () {
+        Route::middleware('role_or_permission:admin|admin_support')->prefix('maintenance')->as('api.maintenance.')->group(function () {
             Route::get('/', [MaintenanceController::class, 'index'])->name('index');
             Route::post('/', [MaintenanceController::class, 'store'])->name('store');
             Route::get('{maintenanceRecord}', [MaintenanceController::class, 'show'])->name('show');
@@ -157,7 +157,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         });
         
         // General Staff - Read-only API access
-        Route::middleware('role:general_staff')->prefix('view')->as('view.')->group(function () {
+        Route::middleware('role:general_staff')->prefix('view')->as('api.view.')->group(function () {
             Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses');
             Route::get('inventory', [InventoryController::class, 'index'])->name('inventory');
             Route::get('assets', [AssetController::class, 'index'])->name('assets');
