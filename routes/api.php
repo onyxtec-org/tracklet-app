@@ -33,6 +33,16 @@ Route::post('/register', [AuthController::class, 'register'])
 Route::post('/login', [AuthController::class, 'login'])
     ->name('api.login');
 
+// Password Reset (Public - No auth required)
+// API uses OTP flow: 1) forgot-password (sends OTP) -> 2) verify-otp (verifies OTP) -> 3) reset-password (resets with verification token)
+// Web uses reset link flow: forgot-password (sends link) -> reset-password (resets with token)
+Route::post('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->name('api.password.email');
+Route::post('/verify-otp', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'verifyOtp'])
+    ->name('api.password.verify.otp');
+Route::post('/reset-password', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])
+    ->name('api.password.update');
+
 // Public API routes
 Route::get('/register-organization', [\App\Http\Controllers\OrganizationRegistrationController::class, 'show'])
     ->name('api.organization.register.show');
@@ -70,6 +80,8 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])
         ->name('api.profile');
+    Route::put('/profile', [ProfileController::class, 'update'])
+        ->name('api.profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePasswordProfile'])
         ->name('api.password.profile.update');
     
@@ -165,9 +177,9 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         
         // General Staff - Read-only API access
         Route::middleware('role:general_staff')->prefix('view')->as('api.view.')->group(function () {
-            Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses');
-            Route::get('inventory', [InventoryController::class, 'index'])->name('inventory');
+            // Assets - Read-only (only their own assigned assets)
             Route::get('assets', [AssetController::class, 'index'])->name('assets');
+            Route::get('assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
         });
     });
 });

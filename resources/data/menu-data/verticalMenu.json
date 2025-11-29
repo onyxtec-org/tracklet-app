@@ -62,26 +62,12 @@
       "roles": ["admin", "admin_support"]
     },
     {
-      "navheader": "View Only",
-      "roles": ["general_staff"]
-    },
-    {
-      "url": "/view/expenses",
-      "name": "View Expenses",
-      "icon": "dollar-sign",
-      "slug": "view.expenses",
-      "roles": ["general_staff"]
-    },
-    {
-      "url": "/view/inventory",
-      "name": "View Inventory",
-      "icon": "package",
-      "slug": "view.inventory",
+      "navheader": "My Assets",
       "roles": ["general_staff"]
     },
     {
       "url": "/view/assets",
-      "name": "View Assets",
+      "name": "My Assets",
       "icon": "layers",
       "slug": "view.assets",
       "roles": ["general_staff"]

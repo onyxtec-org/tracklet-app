@@ -60,6 +60,41 @@
 }
 ```
 
+### Forgot Password (API - OTP Based)
+**POST** `/api/forgot-password`  
+**Auth:** Not Required
+
+**Request:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "We have sent an OTP to your email address. Please check your inbox."
+}
+```
+
+**Note:** API sends 6-digit OTP via email (expires in 10 minutes). Web sends reset link.
+
+### Verify OTP (API Only)
+**POST** `/api/verify-otp`  
+**Auth:** Not Required  
+**Request:** `{"email": "user@example.com", "otp": "123456"}`  
+**Response:** `{"success": true, "message": "OTP verified successfully. You can now reset your password.", "data": {"verification_token": "abc123..."}}`  
+**Note:** Verifies OTP and returns verification_token for password reset. OTP expires in 10 minutes.
+
+### Reset Password (API - After OTP Verification)
+**POST** `/api/reset-password`  
+**Auth:** Not Required  
+**Request:** `{"email": "user@example.com", "verification_token": "abc123...", "password": "newpassword", "password_confirmation": "newpassword"}`  
+**Response:** `{"success": true, "message": "Your password has been reset successfully!"}`  
+**Note:** API uses verification_token from verify-otp endpoint. Web uses token from reset link. Verification token expires in 10 minutes.
+
 ### Get Current User
 **GET** `/api/user`  
 **Auth:** Required
@@ -96,6 +131,77 @@
   "current_password": "oldpass",
   "password": "newpass123",
   "password_confirmation": "newpass123"
+}
+```
+
+---
+
+## 👤 Profile Management
+
+### Get Profile
+**GET** `/api/profile`  
+**Auth:** Required
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "organization": {"id": 1, "name": "Acme Corp"},
+      "roles": [{"name": "admin"}]
+    }
+  }
+}
+```
+
+### Update Profile
+**PUT** `/api/profile`  
+**Auth:** Required
+
+**Request:**
+```json
+{
+  "name": "John Doe"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }
+}
+```
+
+### Update Password (Profile)
+**PUT** `/api/profile/password`  
+**Auth:** Required
+
+**Request:**
+```json
+{
+  "old-password": "oldpassword123",
+  "new-password": "newpassword123",
+  "new-password_confirmation": "newpassword123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password updated successfully"
 }
 ```
 

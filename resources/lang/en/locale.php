@@ -191,8 +191,5 @@ return [
   'Inventory Management' => 'Inventory Management',
   'Asset Management' => 'Asset Management',
   'Repair & Maintenance' => 'Repair & Maintenance',
-  'View Only' => 'View Only',
-  'View Expenses' => 'View Expenses',
-  'View Inventory' => 'View Inventory',
-  'View Assets' => 'View Assets'
+  'My Assets' => 'My Assets'
 ];

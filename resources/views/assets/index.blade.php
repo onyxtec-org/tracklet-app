@@ -13,7 +13,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title">Assets</h4>
+                <h4 class="card-title">{{ auth()->user()->hasRole('general_staff') ? 'My Assets' : 'Assets' }}</h4>
                 @if(!auth()->user()->hasRole('general_staff'))
                 <a href="{{ route('assets.create') }}" class="btn btn-primary">
                     <i data-feather="plus" class="mr-1"></i> Add Asset
@@ -78,6 +78,7 @@
                                 @endforeach
                             </select>
                         </div>
+                        @if(!auth()->user()->hasRole('general_staff'))
                         <div class="col-md-3">
                             <label>Assigned To</label>
                             <select name="assigned_to_user_id" class="form-control">
@@ -87,7 +88,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        @endif
+                        <div class="col-md-{{ auth()->user()->hasRole('general_staff') ? '6' : '3' }}">
                             <label>Search</label>
                             <input type="text" name="search" class="form-control" value="{{ request('search') }}" placeholder="Search assets...">
                         </div>

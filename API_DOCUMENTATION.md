@@ -46,6 +46,19 @@ Authorization: Bearer {token}
 
 ## Authentication Endpoints
 
+### Password Reset Flow (API)
+
+**For API (Mobile Apps):**
+1. **Step 1**: `POST /api/forgot-password` - Request OTP by email
+2. **Step 2**: `POST /api/verify-otp` - Verify the OTP and get verification token
+3. **Step 3**: `POST /api/reset-password` - Reset password using verification token
+
+**For Web:**
+1. `POST /api/forgot-password` - Request password reset link by email
+2. `POST /api/reset-password` - Reset password using token from email link
+
+---
+
 ### Register Organization
 **POST** `/api/register`
 
@@ -94,6 +107,172 @@ Authorization: Bearer {token}
 }
 ```
 
+### Forgot Password (API - OTP Based)
+**POST** `/api/forgot-password`  
+**Auth:** Not Required
+
+**Request:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "We have sent an OTP to your email address. Please check your inbox."
+}
+```
+
+**Note:** 
+- **API Endpoint**: Sends a 6-digit OTP to the user's email address
+- **Web Endpoint**: Sends a password reset link (different behavior for web requests)
+- OTP expires after 10 minutes
+- Returns error if email doesn't exist (for API)
+- OTP is sent via email and must be verified using `/api/verify-otp` endpoint
+
+**Error Responses:**
+
+**Response (404) - User Not Found:**
+```json
+{
+  "success": false,
+  "message": "We can't find a user with that email address."
+}
+```
+
+**Response (500) - Email Send Failed:**
+```json
+{
+  "success": false,
+  "message": "Failed to send OTP. Please try again later."
+}
+```
+
+### Verify OTP (API Only)
+**POST** `/api/verify-otp`  
+**Auth:** Not Required
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "otp": "123456"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "OTP verified successfully. You can now reset your password.",
+  "data": {
+    "verification_token": "abc123..."
+  }
+}
+```
+
+**Note:** 
+- Verifies the 6-digit OTP received via email
+- Returns a `verification_token` that must be used in the reset-password endpoint
+- OTP expires after 10 minutes
+- OTP can only be verified once
+- After verification, use the `verification_token` to reset password
+
+**Error Responses:**
+
+**Response (400) - OTP Expired:**
+```json
+{
+  "success": false,
+  "message": "OTP has expired. Please request a new OTP."
+}
+```
+
+**Response (400) - OTP Already Used:**
+```json
+{
+  "success": false,
+  "message": "OTP has already been used. Please request a new OTP."
+}
+```
+
+**Response (422) - Invalid OTP:**
+```json
+{
+  "success": false,
+  "message": "Invalid OTP. Please check and try again."
+}
+```
+
+**Response (404) - User Not Found:**
+```json
+{
+  "success": false,
+  "message": "User not found."
+}
+```
+
+### Reset Password (API - After OTP Verification)
+**POST** `/api/reset-password`  
+**Auth:** Not Required
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "verification_token": "abc123...",
+  "password": "newpassword123",
+  "password_confirmation": "newpassword123"
+}
+```
+
+**Note:** 
+- **API Endpoint**: Uses `verification_token` received from verify-otp endpoint
+- **Web Endpoint**: Uses token from reset link (different behavior for web requests)
+- `verification_token` is received from the verify-otp endpoint after OTP verification
+- Password must be at least 8 characters
+- Verification token expires after 10 minutes
+- Verification token can only be used once
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Your password has been reset successfully!"
+}
+```
+
+**Error Responses:**
+
+**Response (400) - Token Expired:**
+```json
+{
+  "success": false,
+  "message": "Verification token has expired. Please verify OTP again."
+}
+```
+
+**Response (422) - Invalid Token:**
+```json
+{
+  "success": false,
+  "message": "Invalid verification token. Please verify OTP again."
+}
+```
+
+**Response (404) - User Not Found:**
+```json
+{
+  "success": false,
+  "message": "User not found."
+}
+```
+
+**Note for Web:** Web endpoints use reset link tokens instead of verification tokens.
+
 ### Get Current User
 **GET** `/api/user`  
 **Auth:** Required
@@ -130,6 +309,90 @@ Authorization: Bearer {token}
   "current_password": "oldpass",
   "password": "newpass123",
   "password_confirmation": "newpass123"
+}
+```
+
+---
+
+## Profile Management
+
+### Get Profile
+**GET** `/api/profile`  
+**Auth:** Required
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "organization": {
+        "id": 1,
+        "name": "Acme Corp"
+      },
+      "roles": [{"name": "admin"}]
+    }
+  }
+}
+```
+
+### Update Profile
+**PUT** `/api/profile`  
+**Auth:** Required
+
+**Request:**
+```json
+{
+  "name": "John Doe"
+}
+```
+
+**Note:** 
+- Only `name` can be updated (email is read-only)
+- Name must be at least 2 characters
+- Name can only contain letters, numbers, and spaces
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }
+}
+```
+
+### Update Password (Profile)
+**PUT** `/api/profile/password`  
+**Auth:** Required
+
+**Request:**
+```json
+{
+  "old-password": "oldpassword123",
+  "new-password": "newpassword123",
+  "new-password_confirmation": "newpassword123"
+}
+```
+
+**Note:** 
+- New password must be at least 8 characters
+- New password must be different from old password
+- Old password must be correct
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password updated successfully"
 }
 ```
 

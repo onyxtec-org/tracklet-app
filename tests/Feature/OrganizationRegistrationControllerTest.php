@@ -33,7 +33,8 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
 
         $response = $this->post('/register-organization', $data);
 
-        $response->assertStatus(200);
+        // Web requests redirect after login, API requests return 200
+        $response->assertStatus(302);
         $this->assertDatabaseHas('organizations', [
             'name' => 'New Company',
             'email' => 'john@newcompany.com',
@@ -52,7 +53,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
     /** @test */
     public function registration_validates_required_fields()
     {
-        $response = $this->post('/register-organization', []);
+        $response = $this->postJson('/api/register-organization', []);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['organization_name', 'name', 'email', 'password']);
@@ -71,7 +72,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'password123'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['email']);
@@ -88,7 +89,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'different'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['password']);
@@ -107,7 +108,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'password123'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(200);
         $organization = Organization::where('name', 'New Company')->where('email', 'john@newcompany.com')->first();
@@ -125,7 +126,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'password123'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(200);
         $user = User::where('email', 'john@newcompany.com')->first();
@@ -143,7 +144,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'password123'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(200);
         $this->assertAuthenticated();
@@ -160,7 +161,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'password123'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(200);
         $organization = Organization::where('name', 'New Company')->first();
@@ -178,7 +179,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'password123'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(200);
         $organization = Organization::where('name', 'New Company')->first();
@@ -228,7 +229,7 @@ class OrganizationRegistrationControllerTest extends TestCaseBase
             'password_confirmation' => 'password123'
         ];
 
-        $response = $this->post('/register-organization', $data);
+        $response = $this->postJson('/api/register-organization', $data);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['organization_name']);

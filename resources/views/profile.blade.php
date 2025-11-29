@@ -31,15 +31,13 @@
                     </a>
                 </li>
                 <!-- change password -->
-                @if($user->hasRole(config('truview.roles.Admin')))
-                    <li class="nav-item">
-                        <a class="nav-link" id="account-pill-password" data-toggle="pill" href="#account-vertical-password"
-                            aria-expanded="false">
-                            <i data-feather="lock" class="font-medium-3 mr-1"></i>
-                            <span class="font-weight-bold">Change Password</span>
-                        </a>
-                    </li>
-                @endif
+                <li class="nav-item">
+                    <a class="nav-link" id="account-pill-password" data-toggle="pill" href="#account-vertical-password"
+                        aria-expanded="false">
+                        <i data-feather="lock" class="font-medium-3 mr-1"></i>
+                        <span class="font-weight-bold">Change Password</span>
+                    </a>
+                </li>
                 <!-- information -->
             </ul>
         </div>

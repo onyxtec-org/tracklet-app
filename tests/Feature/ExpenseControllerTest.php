@@ -45,13 +45,14 @@ class ExpenseControllerTest extends TestCaseBase
     }
 
     /** @test */
-    public function general_staff_can_view_expenses()
+    public function general_staff_cannot_view_expenses()
     {
         $expense = Expense::factory()->forOrganization($this->organization->id)->create();
 
+        // General staff can no longer view expenses - they can only view their own assets
         $response = $this->actingAs($this->generalStaffUser)->getJson('/api/view/expenses');
 
-        $response->assertStatus(200);
+        $response->assertStatus(404); // Route doesn't exist for general_staff anymore
     }
 
     /** @test */

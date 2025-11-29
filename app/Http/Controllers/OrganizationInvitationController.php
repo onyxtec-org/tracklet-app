@@ -56,12 +56,13 @@ class OrganizationInvitationController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s]+$/|min:2',
-            'email' => 'required|email:rfc,dns|in:' . $invitation->email, // Must match invitation email exactly
+            'email' => 'required|email|in:' . $invitation->email, // Must match invitation email exactly
             'password' => 'required|string|min:8|confirmed',
         ], [
             'name.regex' => 'The name field may only contain letters, numbers, and spaces. Special characters are not allowed.',
             'name.min' => 'The name must be at least 2 characters.',
             'email.email' => 'Please enter a valid email address.',
+            'email.in' => 'Email must match the invitation email.',
         ]);
 
         if ($validator->fails()) {

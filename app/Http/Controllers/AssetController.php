@@ -29,7 +29,8 @@ class AssetController extends Controller
      */
     public function index(Request $request)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
         
         if (!$organization) {
             return $this->respondError('User does not belong to an organization.', 403);
@@ -37,6 +38,11 @@ class AssetController extends Controller
 
         $query = Asset::where('organization_id', $organization->id)
             ->with(['assignedToUser']);
+
+        // General staff can only see their own assigned assets
+        if ($user->hasRole('general_staff')) {
+            $query->where('assigned_to_user_id', $user->id);
+        }
 
         // Filters
         if ($request->has('status') && $request->status) {
@@ -48,7 +54,10 @@ class AssetController extends Controller
         }
 
         if ($request->has('assigned_to_user_id') && $request->assigned_to_user_id) {
-            $query->where('assigned_to_user_id', $request->assigned_to_user_id);
+            // General staff cannot filter by other users
+            if (!$user->hasRole('general_staff')) {
+                $query->where('assigned_to_user_id', $request->assigned_to_user_id);
+            }
         }
 
         if ($request->has('search') && $request->search) {
@@ -61,8 +70,11 @@ class AssetController extends Controller
 
         $assets = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // Get filter options
+        // Get filter options (only for non-general_staff)
         $categories = Asset::where('organization_id', $organization->id)
+            ->when($user->hasRole('general_staff'), function ($q) use ($user) {
+                $q->where('assigned_to_user_id', $user->id);
+            })
             ->distinct()
             ->pluck('category')
             ->filter()
@@ -71,13 +83,22 @@ class AssetController extends Controller
 
         $users = User::where('organization_id', $organization->id)->get();
 
-        // Summary counts
-        $summary = [
-            'total' => Asset::where('organization_id', $organization->id)->count(),
-            'active' => Asset::where('organization_id', $organization->id)->where('status', 'active')->count(),
-            'in_repair' => Asset::where('organization_id', $organization->id)->where('status', 'in_repair')->count(),
-            'retired' => Asset::where('organization_id', $organization->id)->where('status', 'retired')->count(),
-        ];
+        // Summary counts (only for non-general_staff)
+        if ($user->hasRole('general_staff')) {
+            $summary = [
+                'total' => Asset::where('organization_id', $organization->id)->where('assigned_to_user_id', $user->id)->count(),
+                'active' => Asset::where('organization_id', $organization->id)->where('assigned_to_user_id', $user->id)->where('status', 'active')->count(),
+                'in_repair' => Asset::where('organization_id', $organization->id)->where('assigned_to_user_id', $user->id)->where('status', 'in_repair')->count(),
+                'retired' => Asset::where('organization_id', $organization->id)->where('assigned_to_user_id', $user->id)->where('status', 'retired')->count(),
+            ];
+        } else {
+            $summary = [
+                'total' => Asset::where('organization_id', $organization->id)->count(),
+                'active' => Asset::where('organization_id', $organization->id)->where('status', 'active')->count(),
+                'in_repair' => Asset::where('organization_id', $organization->id)->where('status', 'in_repair')->count(),
+                'retired' => Asset::where('organization_id', $organization->id)->where('status', 'retired')->count(),
+            ];
+        }
 
         return $this->respond(
             [
@@ -291,10 +312,16 @@ class AssetController extends Controller
      */
     public function show(Asset $asset)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
         
         if (!$organization || $asset->organization_id !== $organization->id) {
             return $this->respondError('Unauthorized access.', 403);
+        }
+
+        // General staff can only see their own assigned assets
+        if ($user->hasRole('general_staff') && $asset->assigned_to_user_id !== $user->id) {
+            return $this->respondError('Unauthorized access. You can only view assets assigned to you.', 403);
         }
 
         $asset->load(['assignedToUser', 'movements.user', 'maintenanceRecords']);
