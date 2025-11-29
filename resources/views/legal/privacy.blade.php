@@ -254,9 +254,9 @@
           <h2>15. Consent</h2>
           <p>By using TrackLet, you consent to the collection, use, and disclosure of your information as described in this Privacy Policy.</p>
 
-          <div class="text-center mt-4">
+          <!-- <div class="text-center mt-4">
             <a href="{{ route('login') }}" class="btn btn-primary">Back to Login</a>
-          </div>
+          </div> -->
 
           <div class="last-updated">
             <p><strong>Last Updated:</strong> {{ date('F j, Y') }}</p>

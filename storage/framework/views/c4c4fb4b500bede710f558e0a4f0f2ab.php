@@ -79,8 +79,8 @@ unset($__errorArgs, $__bag); ?>
           </div>
           <div class="form-group">
             <div class="custom-control custom-checkbox">
-              <input class="custom-control-input" type="checkbox" id="remember-me" name="remember-me" tabindex="3" <?php echo e(old('remember-me') ? 'checked' : ''); ?> />
-              <label class="custom-control-label" for="remember-me"> Remember Me </label>
+              <input class="custom-control-input" type="checkbox" id="remember" name="remember" value="1" tabindex="3" <?php echo e(old('remember') ? 'checked' : 'checked'); ?> />
+              <label class="custom-control-label" for="remember"> Remember Me </label>
             </div>
           </div>
           <button type="submit" class="btn btn-primary btn-block" tabindex="4">Sign in</button>

@@ -16,6 +16,23 @@
                     <div class="form-group">
                         <div class="row">
                             <div class="col-md-6">
+                                <div class="mb-2">
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="category_existing" name="category_type" value="existing" class="custom-control-input" checked>
+                                        <label class="custom-control-label" for="category_existing">Select Existing Category</label>
+                                    </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="category_new" name="category_type" value="new" class="custom-control-input">
+                                        <label class="custom-control-label" for="category_new">Create New Category</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
                                 <label>Category <span class="text-danger">*</span></label>
                             </div>
                             <div class="col-md-6">
@@ -72,17 +89,6 @@ $message = $__bag->first($__errorArgs[0]); ?>
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                
-                                <div class="mt-2">
-                                    <div class="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" id="category_existing" name="category_type" value="existing" class="custom-control-input" checked>
-                                        <label class="custom-control-label" for="category_existing">Select Existing Category</label>
-                                    </div>
-                                    <div class="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" id="category_new" name="category_type" value="new" class="custom-control-input">
-                                        <label class="custom-control-label" for="category_new">Create New Category</label>
-                                    </div>
-                                </div>
                                 
                                 <small class="text-muted d-block mt-1">If category doesn't exist, select "Create New Category" and enter the category name.</small>
                             </div>

@@ -261,9 +261,9 @@
           <h2>18. Entire Agreement</h2>
           <p>These Terms, together with our Privacy Policy, constitute the entire agreement between you and TrackLet regarding the use of the Service and supersede all prior agreements and understandings.</p>
 
-          <div class="text-center mt-4">
+          <!-- <div class="text-center mt-4">
             <a href="<?php echo e(route('login')); ?>" class="btn btn-primary">Back to Login</a>
-          </div>
+          </div> -->
 
           <div class="last-updated">
             <p><strong>Last Updated:</strong> <?php echo e(date('F j, Y')); ?></p>

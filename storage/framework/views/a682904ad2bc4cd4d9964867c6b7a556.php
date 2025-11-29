@@ -48,10 +48,21 @@
                             <label>Date To</label>
                             <input type="date" name="date_to" class="form-control" value="<?php echo e(request('date_to')); ?>">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>Vendor/Payee</label>
                             <input type="text" name="vendor" class="form-control" value="<?php echo e(request('vendor')); ?>" placeholder="Search vendor...">
                         </div>
+                        <?php if(auth()->user()->hasRole('admin')): ?>
+                        <div class="col-md-2">
+                            <label>Status</label>
+                            <select name="approval_status" class="form-control">
+                                <option value="">All Status</option>
+                                <option value="pending" <?php echo e(request('approval_status') == 'pending' ? 'selected' : ''); ?>>Pending</option>
+                                <option value="approved" <?php echo e(request('approval_status') == 'approved' ? 'selected' : ''); ?>>Approved</option>
+                                <option value="rejected" <?php echo e(request('approval_status') == 'rejected' ? 'selected' : ''); ?>>Rejected</option>
+                            </select>
+                        </div>
+                        <?php endif; ?>
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary mr-1">Filter</button>
                             <a href="<?php echo e(route(auth()->user()->hasRole('general_staff') ? 'view.expenses' : 'expenses.index')); ?>" class="btn btn-outline-secondary">Clear</a>
@@ -68,6 +79,7 @@
                                 <th>Amount</th>
                                 <th>Vendor/Payee</th>
                                 <th>Description</th>
+                                <th>Status</th>
                                 <th>Created By</th>
                                 <th>Actions</th>
                             </tr>
@@ -80,6 +92,15 @@
                                 <td><strong>$<?php echo e(number_format($expense->amount, 2)); ?></strong></td>
                                 <td><?php echo e($expense->vendor_payee ?? '-'); ?></td>
                                 <td><?php echo e(Str::limit($expense->description, 50)); ?></td>
+                                <td>
+                                    <?php if($expense->approval_status == 'approved'): ?>
+                                        <span class="badge badge-light-success">Approved</span>
+                                    <?php elseif($expense->approval_status == 'rejected'): ?>
+                                        <span class="badge badge-light-danger">Rejected</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-light-warning">Pending</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo e($expense->user->name); ?></td>
                                 <td>
                                     <div class="d-inline-flex">
@@ -103,7 +124,7 @@
                             </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
-                                <td colspan="7" class="text-center">No expenses found.</td>
+                                <td colspan="8" class="text-center">No expenses found.</td>
                             </tr>
                             <?php endif; ?>
                         </tbody>
