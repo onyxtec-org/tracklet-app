@@ -41,6 +41,20 @@ class Asset extends Model
     ];
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When an asset is deleted (soft or hard), delete related maintenance records
+        static::deleting(function ($asset) {
+            // Soft delete all related maintenance records
+            $asset->maintenanceRecords()->delete();
+        });
+    }
+
+    /**
      * Get the organization that owns the asset
      */
     public function organization(): BelongsTo

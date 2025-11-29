@@ -25,7 +25,26 @@ class ExpenseController extends Controller
      *     @OA\Parameter(name="date_from", in="query", @OA\Schema(type="string", format="date")),
      *     @OA\Parameter(name="date_to", in="query", @OA\Schema(type="string", format="date")),
      *     @OA\Parameter(name="vendor", in="query", @OA\Schema(type="string")),
-     *     @OA\Response(response=200, description="List of expenses")
+     *     @OA\Parameter(name="approval_status", in="query", @OA\Schema(type="string", enum={"pending", "approved", "rejected"}), description="Filter by approval status (admin only)"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of expenses. Non-admin users only see their own expenses or approved expenses.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="expenses", type="object",
+     *                     @OA\Property(property="data", type="array",
+     *                         @OA\Items(
+     *                             @OA\Property(property="approval_status", type="string", enum={"pending", "approved", "rejected"}),
+     *                             @OA\Property(property="approved_by", type="integer", nullable=true),
+     *                             @OA\Property(property="approved_at", type="string", format="date-time", nullable=true),
+     *                             @OA\Property(property="rejection_reason", type="string", nullable=true)
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
      * )
      */
     public function index(Request $request)
@@ -37,7 +56,7 @@ class ExpenseController extends Controller
         }
 
         $query = Expense::where('organization_id', $organization->id)
-            ->with(['category', 'user'])
+            ->with(['category', 'user', 'approver'])
             ->orderBy('expense_date', 'desc');
 
         // Apply filters
@@ -55,6 +74,20 @@ class ExpenseController extends Controller
 
         if ($request->has('vendor') && $request->vendor) {
             $query->where('vendor_payee', 'like', '%' . $request->vendor . '%');
+        }
+
+        // Filter by approval status
+        if ($request->has('approval_status') && $request->approval_status) {
+            $query->where('approval_status', $request->approval_status);
+        }
+
+        // Non-admin users only see their own expenses or approved expenses
+        $user = auth()->user();
+        if (!$user->hasRole('admin')) {
+            $query->where(function($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('approval_status', 'approved');
+            });
         }
 
         $expenses = $query->paginate(20);
@@ -118,7 +151,21 @@ class ExpenseController extends Controller
      *             @OA\Property(property="description", type="string", example="Office supplies")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Expense created successfully"),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Expense created successfully. Admin expenses are auto-approved, non-admin expenses require approval.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Expense created and approved successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="expense", type="object",
+     *                     @OA\Property(property="approval_status", type="string", enum={"pending", "approved", "rejected"}),
+     *                     @OA\Property(property="approved_by", type="integer", nullable=true),
+     *                     @OA\Property(property="approved_at", type="string", format="date-time", nullable=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
@@ -173,6 +220,13 @@ class ExpenseController extends Controller
             );
         }
 
+        // Determine approval status based on user role
+        // Admin expenses are auto-approved, others need approval
+        $user = auth()->user();
+        $approvalStatus = $user->hasRole('admin') ? 'approved' : 'pending';
+        $approvedBy = $user->hasRole('admin') ? $user->id : null;
+        $approvedAt = $user->hasRole('admin') ? now() : null;
+
         $expense = Expense::create([
             'organization_id' => $organization->id,
             'expense_category_id' => $category->id,
@@ -182,12 +236,18 @@ class ExpenseController extends Controller
             'vendor_payee' => $validated['vendor_payee'] ?? null,
             'description' => $validated['description'] ?? null,
             'receipt_path' => $receiptPath,
+            'approval_status' => $approvalStatus,
+            'approved_by' => $approvedBy,
+            'approved_at' => $approvedAt,
         ]);
 
+        $message = $approvalStatus === 'approved' 
+            ? 'Expense created and approved successfully.' 
+            : 'Expense created successfully. It is pending admin approval.';
+
         return $this->respond([
-            'message' => 'Expense created successfully.',
-            'expense' => $expense->load(['category', 'user']),
-            'redirect' => route('expenses.index'),
+            'message' => $message,
+            'expense' => $expense->load(['category', 'user', 'approver']),
         ], null, [], 201);
     }
 
@@ -210,7 +270,7 @@ class ExpenseController extends Controller
             return $this->respondError('Unauthorized access.', 403);
         }
 
-        $expense->load(['category', 'user']);
+        $expense->load(['category', 'user', 'approver']);
 
         return $this->respond(
             ['expense' => $expense],
@@ -220,7 +280,15 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Show the form for editing the specified expense.
+     * @OA\Get(
+     *     path="/api/expenses/{id}/edit",
+     *     summary="Get expense edit form (Web only)",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Expense edit form data"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
      */
     public function edit(Expense $expense)
     {
@@ -266,7 +334,19 @@ class ExpenseController extends Controller
      *             @OA\Property(property="description", type="string")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Expense updated successfully"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Expense updated successfully. If non-admin edits an approved/rejected expense, approval status resets to pending.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Expense updated successfully. It is pending admin approval."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="expense", type="object",
+     *                     @OA\Property(property="approval_status", type="string", enum={"pending", "approved", "rejected"})
+     *                 )
+     *             )
+     *         )
+     *     ),
      *     @OA\Response(response=403, description="Unauthorized")
      * )
      */
@@ -327,18 +407,36 @@ class ExpenseController extends Controller
             $validated['receipt_path'] = $receiptPath;
         }
 
-        $expense->update([
+        $user = auth()->user();
+        
+        // If non-admin edits an expense, reset approval status to pending
+        $updateData = [
             'expense_category_id' => $category->id,
             'expense_date' => $validated['expense_date'],
             'amount' => $validated['amount'],
             'vendor_payee' => $validated['vendor_payee'] ?? null,
             'description' => $validated['description'] ?? null,
             'receipt_path' => $validated['receipt_path'] ?? $expense->receipt_path,
-        ]);
+        ];
+
+        // If non-admin edits, reset approval status
+        if (!$user->hasRole('admin') && $expense->approval_status !== 'pending') {
+            $updateData['approval_status'] = 'pending';
+            $updateData['approved_by'] = null;
+            $updateData['approved_at'] = null;
+            $updateData['rejection_reason'] = null;
+        }
+
+        $expense->update($updateData);
+
+        $message = 'Expense updated successfully.';
+        if (!$user->hasRole('admin') && $expense->approval_status === 'pending') {
+            $message .= ' It is pending admin approval.';
+        }
 
         return $this->respond([
-            'message' => 'Expense updated successfully.',
-            'expense' => $expense->fresh()->load(['category', 'user']),
+            'message' => $message,
+            'expense' => $expense->fresh()->load(['category', 'user', 'approver']),
         ]);
     }
 
@@ -374,6 +472,92 @@ class ExpenseController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/expenses/{id}/approve",
+     *     summary="Approve expense (Admin only)",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Expense approved successfully"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
+     */
+    public function approve(Expense $expense)
+    {
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        if (!$organization || $expense->organization_id !== $organization->id) {
+            return $this->respondError('Unauthorized access.', 403);
+        }
+
+        // Only admin can approve expenses
+        if (!$user->hasRole('admin')) {
+            return $this->respondError('Only administrators can approve expenses.', 403);
+        }
+
+        $expense->update([
+            'approval_status' => 'approved',
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+            'rejection_reason' => null,
+        ]);
+
+        return $this->respond([
+            'message' => 'Expense approved successfully.',
+            'expense' => $expense->fresh()->load(['category', 'user', 'approver']),
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/expenses/{id}/reject",
+     *     summary="Reject expense (Admin only)",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="rejection_reason", type="string", example="Insufficient documentation")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Expense rejected successfully"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
+     */
+    public function reject(Request $request, Expense $expense)
+    {
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        if (!$organization || $expense->organization_id !== $organization->id) {
+            return $this->respondError('Unauthorized access.', 403);
+        }
+
+        // Only admin can reject expenses
+        if (!$user->hasRole('admin')) {
+            return $this->respondError('Only administrators can reject expenses.', 403);
+        }
+
+        $validated = $request->validate([
+            'rejection_reason' => 'nullable|string|max:1000',
+        ]);
+
+        $expense->update([
+            'approval_status' => 'rejected',
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+            'rejection_reason' => $validated['rejection_reason'] ?? null,
+        ]);
+
+        return $this->respond([
+            'message' => 'Expense rejected successfully.',
+            'expense' => $expense->fresh()->load(['category', 'user', 'approver']),
+        ]);
+    }
+
+    /**
      * @OA\Get(
      *     path="/api/expenses/reports",
      *     summary="Get expense reports",
@@ -397,7 +581,8 @@ class ExpenseController extends Controller
         $period = $request->get('period', 'monthly'); // monthly, quarterly, ytd
         $year = $request->get('year', date('Y'));
 
-        $query = Expense::where('organization_id', $organization->id);
+        $query = Expense::where('organization_id', $organization->id)
+            ->where('approval_status', 'approved'); // Only include approved expenses in reports
 
         switch ($period) {
             case 'monthly':
@@ -478,7 +663,8 @@ class ExpenseController extends Controller
         $period = $request->get('period', 'monthly');
         $year = $request->get('year', date('Y'));
 
-        $query = Expense::where('organization_id', $organization->id);
+        $query = Expense::where('organization_id', $organization->id)
+            ->where('approval_status', 'approved'); // Only include approved expenses in charts
 
         switch ($period) {
             case 'monthly':
@@ -567,6 +753,7 @@ class ExpenseController extends Controller
 
         $format = $request->get('format', 'excel'); // excel or pdf
         $query = Expense::where('organization_id', $organization->id)
+            ->where('approval_status', 'approved') // Only include approved expenses in export
             ->with(['category', 'user']);
 
         // Apply same filters as index

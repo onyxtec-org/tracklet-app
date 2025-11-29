@@ -50,10 +50,11 @@ class User extends Authenticatable
 
     /**
      * Get the organization that owns the user.
+     * Includes soft-deleted organizations to prevent authentication issues.
      */
     public function organization(): BelongsTo
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(Organization::class)->withTrashed();
     }
 
     /**

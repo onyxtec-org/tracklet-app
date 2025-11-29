@@ -281,6 +281,21 @@ class AssetControllerTest extends TestCaseBase
     }
 
     /** @test */
+    public function deleting_asset_soft_deletes_related_maintenance_records()
+    {
+        $asset = Asset::factory()->forOrganization($this->organization->id)->create();
+        $maintenance1 = MaintenanceRecord::factory()->forOrganization($this->organization->id)->forAsset($asset->id)->create();
+        $maintenance2 = MaintenanceRecord::factory()->forOrganization($this->organization->id)->forAsset($asset->id)->create();
+
+        $response = $this->actingAs($this->adminUser)->deleteJson("/api/assets/{$asset->id}");
+
+        $response->assertStatus(200);
+        $this->assertSoftDeleted('assets', ['id' => $asset->id]);
+        $this->assertSoftDeleted('maintenance_records', ['id' => $maintenance1->id]);
+        $this->assertSoftDeleted('maintenance_records', ['id' => $maintenance2->id]);
+    }
+
+    /** @test */
     public function admin_can_log_asset_movement()
     {
         $asset = Asset::factory()->forOrganization($this->organization->id)->create();

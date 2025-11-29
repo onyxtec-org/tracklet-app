@@ -20,11 +20,16 @@ class Expense extends Model
         'vendor_payee',
         'description',
         'receipt_path',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
     ];
 
     protected $casts = [
         'expense_date' => 'date',
         'amount' => 'decimal:2',
+        'approved_at' => 'datetime',
     ];
 
     /**
@@ -49,5 +54,37 @@ class Expense extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the user who approved the expense
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Check if expense is pending approval
+     */
+    public function isPending(): bool
+    {
+        return $this->approval_status === 'pending';
+    }
+
+    /**
+     * Check if expense is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->approval_status === 'approved';
+    }
+
+    /**
+     * Check if expense is rejected
+     */
+    public function isRejected(): bool
+    {
+        return $this->approval_status === 'rejected';
     }
 }

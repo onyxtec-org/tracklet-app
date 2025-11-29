@@ -356,6 +356,15 @@ Now you can start using the various modules. See [Module Usage](#module-usage) s
 **Access:** Admin, Finance roles  
 **Purpose:** Track and analyze business expenses
 
+#### Expense Approval Workflow
+
+**Important:** Expenses require admin approval before they appear in reports and charts.
+
+- **Admin users:** Expenses are automatically approved when created
+- **Non-admin users (Finance, Admin Support, General Staff):** Expenses are created with "Pending" status and require admin approval
+- **Only approved expenses** appear in reports, charts, and exports
+- **Pending and rejected expenses** are excluded from financial reports
+
 #### Adding Expenses
 
 **Steps:**
@@ -365,11 +374,14 @@ Now you can start using the various modules. See [Module Usage](#module-usage) s
    - Or go to `/expenses`
 
 2. **View Expenses:**
-   - See list of all expenses (initially empty)
+   - See list of all expenses
+   - **Admin users:** See all expenses with status badges (Pending, Approved, Rejected)
+   - **Non-admin users:** See only their own expenses or approved expenses
    - Filter by:
      - Category
      - Date range
      - Vendor/Payee
+     - Approval Status (admin only: pending, approved, rejected)
      - Search by description
 
 3. **Add New Expense:**
@@ -384,12 +396,44 @@ Now you can start using the various modules. See [Module Usage](#module-usage) s
      - **Description:** What the expense was for (optional)
      - **Receipt/Invoice:** Upload file (PDF, JPG, PNG - max 5MB) (optional)
    - Click "Save Expense"
+   - **Admin:** Expense is immediately approved - you'll see "Expense created and approved successfully"
+   - **Non-admin:** Expense is created with "Pending" status - you'll see "Expense created successfully. It is pending admin approval"
 
 4. **Category Auto-Creation:**
    - If you select "Create New Category" and enter a name:
      - Category is created automatically if it doesn't exist
      - Category is assigned to your organization
      - You can use it for future expenses
+
+#### Approving/Rejecting Expenses (Admin Only)
+
+**Who Can Approve:** Admin users only
+
+**Steps:**
+
+1. **View Pending Expenses:**
+   - Go to Expenses list
+   - Filter by "Pending" status (admin only)
+   - Or view any expense detail page
+
+2. **Approve Expense:**
+   - Click on an expense to view details
+   - Click "Approve" button (green button with checkmark)
+   - Confirm approval
+   - Expense status changes to "Approved"
+   - Expense now appears in reports and charts
+
+3. **Reject Expense:**
+   - Click on an expense to view details
+   - Click "Reject" button (red button with X)
+   - Enter rejection reason (optional but recommended)
+   - Click "Reject Expense"
+   - Expense status changes to "Rejected"
+   - User who created the expense can see the rejection reason
+
+**Note:** 
+- If a non-admin user edits an approved/rejected expense, it resets to "Pending" status and requires re-approval
+- Only approved expenses are included in financial calculations
 
 #### Managing Categories
 

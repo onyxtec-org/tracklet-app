@@ -241,7 +241,11 @@ Authorization: Bearer {token}
 **GET** `/api/expenses`  
 **Auth:** Required | **Role:** `admin` or `finance`
 
-**Query:** `?category_id=1&date_from=2025-01-01&date_to=2025-12-31&search=office`
+**Query:** `?category_id=1&date_from=2025-01-01&date_to=2025-12-31&vendor=office&approval_status=pending`
+
+**Note:** 
+- Non-admin users only see their own expenses or approved expenses
+- Admin users can filter by `approval_status` (pending, approved, rejected)
 
 **Response:**
 ```json
@@ -256,8 +260,13 @@ Authorization: Bearer {token}
           "amount": "150.00",
           "vendor_payee": "Office Depot",
           "description": "Office supplies",
+          "approval_status": "approved",
+          "approved_by": 1,
+          "approved_at": "2025-11-28T10:30:00.000000Z",
+          "rejection_reason": null,
           "category": {"id": 1, "name": "Stationery"},
-          "user": {"id": 1, "name": "John Doe"}
+          "user": {"id": 1, "name": "John Doe"},
+          "approver": {"id": 1, "name": "Admin User"}
         }
       ]
     }
@@ -281,11 +290,92 @@ Authorization: Bearer {token}
 }
 ```
 
-**Note:** Use either `expense_category_id` (existing) or `category_name` (auto-creates if doesn't exist).
+**Note:** 
+- Use either `expense_category_id` (existing) or `category_name` (auto-creates if doesn't exist)
+- **Admin expenses are auto-approved**
+- **Non-admin expenses require admin approval** (status: `pending`)
+
+**Response (Admin):**
+```json
+{
+  "success": true,
+  "message": "Expense created and approved successfully.",
+  "data": {
+    "expense": {
+      "approval_status": "approved",
+      "approved_by": 1,
+      "approved_at": "2025-11-28T10:30:00.000000Z"
+    }
+  }
+}
+```
+
+**Response (Non-Admin):**
+```json
+{
+  "success": true,
+  "message": "Expense created successfully. It is pending admin approval.",
+  "data": {
+    "expense": {
+      "approval_status": "pending",
+      "approved_by": null,
+      "approved_at": null
+    }
+  }
+}
+```
+
+### Approve Expense
+**POST** `/api/expenses/{id}/approve`  
+**Auth:** Required | **Role:** `admin` only
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Expense approved successfully.",
+  "data": {
+    "expense": {
+      "approval_status": "approved",
+      "approved_by": 1,
+      "approved_at": "2025-11-28T10:30:00.000000Z"
+    }
+  }
+}
+```
+
+### Reject Expense
+**POST** `/api/expenses/{id}/reject`  
+**Auth:** Required | **Role:** `admin` only
+
+**Request:**
+```json
+{
+  "rejection_reason": "Insufficient documentation"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Expense rejected successfully.",
+  "data": {
+    "expense": {
+      "approval_status": "rejected",
+      "approved_by": 1,
+      "approved_at": "2025-11-28T10:30:00.000000Z",
+      "rejection_reason": "Insufficient documentation"
+    }
+  }
+}
+```
 
 ### Update Expense
 **PUT** `/api/expenses/{id}`  
 **Auth:** Required | **Role:** `admin` or `finance`
+
+**Note:** If non-admin edits an approved/rejected expense, approval status resets to `pending`.
 
 ### Delete Expense
 **DELETE** `/api/expenses/{id}`  

@@ -49,10 +49,21 @@
                             <label>Date To</label>
                             <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label>Vendor/Payee</label>
                             <input type="text" name="vendor" class="form-control" value="{{ request('vendor') }}" placeholder="Search vendor...">
                         </div>
+                        @if(auth()->user()->hasRole('admin'))
+                        <div class="col-md-2">
+                            <label>Status</label>
+                            <select name="approval_status" class="form-control">
+                                <option value="">All Status</option>
+                                <option value="pending" {{ request('approval_status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="approved" {{ request('approval_status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                                <option value="rejected" {{ request('approval_status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                            </select>
+                        </div>
+                        @endif
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary mr-1">Filter</button>
                             <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.expenses' : 'expenses.index') }}" class="btn btn-outline-secondary">Clear</a>
@@ -69,6 +80,7 @@
                                 <th>Amount</th>
                                 <th>Vendor/Payee</th>
                                 <th>Description</th>
+                                <th>Status</th>
                                 <th>Created By</th>
                                 <th>Actions</th>
                             </tr>
@@ -81,6 +93,15 @@
                                 <td><strong>${{ number_format($expense->amount, 2) }}</strong></td>
                                 <td>{{ $expense->vendor_payee ?? '-' }}</td>
                                 <td>{{ Str::limit($expense->description, 50) }}</td>
+                                <td>
+                                    @if($expense->approval_status == 'approved')
+                                        <span class="badge badge-light-success">Approved</span>
+                                    @elseif($expense->approval_status == 'rejected')
+                                        <span class="badge badge-light-danger">Rejected</span>
+                                    @else
+                                        <span class="badge badge-light-warning">Pending</span>
+                                    @endif
+                                </td>
                                 <td>{{ $expense->user->name }}</td>
                                 <td>
                                     <div class="d-inline-flex">
@@ -104,7 +125,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center">No expenses found.</td>
+                                <td colspan="8" class="text-center">No expenses found.</td>
                             </tr>
                             @endforelse
                         </tbody>

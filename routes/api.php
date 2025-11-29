@@ -119,6 +119,9 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
             // Resource routes
             Route::get('/', [ExpenseController::class, 'index'])->name('index');
             Route::post('/', [ExpenseController::class, 'store'])->name('store');
+            // Approval routes (Admin only) - must come before {expense} route
+            Route::post('{expense}/approve', [ExpenseController::class, 'approve'])->name('approve')->middleware('role:admin');
+            Route::post('{expense}/reject', [ExpenseController::class, 'reject'])->name('reject')->middleware('role:admin');
             Route::get('{expense}', [ExpenseController::class, 'show'])->name('show');
             Route::put('{expense}', [ExpenseController::class, 'update'])->name('update');
             Route::delete('{expense}', [ExpenseController::class, 'destroy'])->name('destroy');

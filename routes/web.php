@@ -115,6 +115,9 @@ Route::group(['middleware' => ['auth', 'require.password.change']], function () 
             Route::get('reports', [ExpenseController::class, 'reports'])->name('reports');
             Route::get('charts', [ExpenseController::class, 'charts'])->name('charts');
             Route::get('export', [ExpenseController::class, 'export'])->name('export');
+            // Approval routes (Admin only)
+            Route::post('{expense}/approve', [ExpenseController::class, 'approve'])->name('approve')->middleware('role:admin');
+            Route::post('{expense}/reject', [ExpenseController::class, 'reject'])->name('reject')->middleware('role:admin');
             // Resource routes
             Route::get('{expense}', [ExpenseController::class, 'show'])->name('show');
             Route::get('{expense}/edit', [ExpenseController::class, 'edit'])->name('edit');
