@@ -66,6 +66,17 @@ class LoginController extends Controller
                 ->with('warning', 'You must change your password before continuing.');
         }
 
+        // Super admin can access dashboard directly
+        if ($user->isSuperAdmin()) {
+            return redirect()->intended($this->redirectPath());
+        }
+
+        // Check if organization is subscribed (for organization users)
+        if ($user->organization && !$user->organization->isSubscribed()) {
+            return redirect()->route('subscription.checkout')
+                ->with('info', 'Please complete your subscription to access the platform.');
+        }
+
         return redirect()->intended($this->redirectPath());
     }
 }

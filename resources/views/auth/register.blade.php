@@ -14,7 +14,7 @@
     <div class="card mb-0">
       <div class="card-body">
         <a href="javascript:void(0);" class="brand-logo">
-          <img src="{{asset('images/logo/LOGO.svg')}}" alt="Mary Kay">
+          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet">
         </a>
 
         <h4 class="card-title mb-1">Adventure starts here 🚀</h4>

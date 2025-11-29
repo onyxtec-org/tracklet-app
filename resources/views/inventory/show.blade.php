@@ -68,11 +68,46 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5>Stock Transactions</h5>
-                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#stockModal">
-                                    <i data-feather="plus" class="mr-1"></i> Log Stock
-                                </button>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-success mr-1" data-toggle="modal" data-target="#stockModal" onclick="setStockType('in')">
+                                        <i data-feather="arrow-down" class="mr-1"></i> Stock In
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#stockModal" onclick="setStockType('out')">
+                                        <i data-feather="arrow-up" class="mr-1"></i> Stock Out
+                                    </button>
+                                </div>
                             </div>
                             <div class="card-body">
+                                @php
+                                    $stockInTotal = $item->stockTransactions->where('type', 'in')->sum('quantity');
+                                    $stockOutTotal = $item->stockTransactions->where('type', 'out')->sum('quantity');
+                                @endphp
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="card border-left-success">
+                                            <div class="card-body p-2">
+                                                <h6 class="mb-0 text-success">Total Stock In</h6>
+                                                <h4 class="mb-0">{{ number_format($stockInTotal) }} {{ $item->unit }}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card border-left-danger">
+                                            <div class="card-body p-2">
+                                                <h6 class="mb-0 text-danger">Total Stock Out</h6>
+                                                <h4 class="mb-0">{{ number_format($stockOutTotal) }} {{ $item->unit }}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card border-left-primary">
+                                            <div class="card-body p-2">
+                                                <h6 class="mb-0 text-primary">Current Stock</h6>
+                                                <h4 class="mb-0">{{ number_format($item->quantity) }} {{ $item->unit }}</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="table-responsive">
                                     <table class="table">
                                         <thead>
@@ -81,27 +116,40 @@
                                                 <th>Type</th>
                                                 <th>Quantity</th>
                                                 <th>Reference</th>
+                                                <th>Notes</th>
                                                 <th>User</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($item->stockTransactions as $transaction)
+                                            @forelse($item->stockTransactions->sortByDesc('transaction_date') as $transaction)
                                             <tr>
                                                 <td>{{ $transaction->transaction_date->format('M d, Y') }}</td>
                                                 <td>
                                                     @if($transaction->type == 'in')
-                                                        <span class="badge badge-light-success">Stock In</span>
+                                                        <span class="badge badge-light-success">
+                                                            <i data-feather="arrow-down" class="font-small-2 mr-50"></i> Stock In
+                                                        </span>
                                                     @else
-                                                        <span class="badge badge-light-danger">Stock Out</span>
+                                                        <span class="badge badge-light-danger">
+                                                            <i data-feather="arrow-up" class="font-small-2 mr-50"></i> Stock Out
+                                                        </span>
                                                     @endif
                                                 </td>
-                                                <td>{{ $transaction->quantity }} {{ $item->unit }}</td>
+                                                <td>
+                                                    @if($transaction->type == 'in')
+                                                        <span class="text-success">+{{ $transaction->quantity }}</span>
+                                                    @else
+                                                        <span class="text-danger">-{{ $transaction->quantity }}</span>
+                                                    @endif
+                                                    {{ $item->unit }}
+                                                </td>
                                                 <td>{{ $transaction->reference ?? '-' }}</td>
+                                                <td>{{ $transaction->notes ?? '-' }}</td>
                                                 <td>{{ $transaction->user->name }}</td>
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="5" class="text-center">No transactions found.</td>
+                                                <td colspan="6" class="text-center">No transactions found.</td>
                                             </tr>
                                             @endforelse
                                         </tbody>
@@ -129,12 +177,12 @@
                     </button>
                 </div>
                 <div class="modal-body">
+                    <input type="hidden" name="type" id="stockTransactionType" value="in" required>
                     <div class="form-group">
-                        <label>Type <span class="text-danger">*</span></label>
-                        <select name="type" class="form-control" required>
-                            <option value="in">Stock In</option>
-                            <option value="out">Stock Out</option>
-                        </select>
+                        <label>Transaction Type</label>
+                        <div id="transactionTypeDisplay" class="alert alert-info mb-2">
+                            <i data-feather="arrow-down" class="mr-1"></i> <strong>Stock In</strong> - Adding inventory
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Quantity <span class="text-danger">*</span></label>
@@ -180,12 +228,33 @@ $(function() {
         feather.replace({ width: 14, height: 14 });
     }
 
-    $('#stockModal select[name="type"]').on('change', function() {
-        if ($(this).val() == 'in') {
+    function setStockType(type) {
+        $('#stockTransactionType').val(type);
+        updateTransactionTypeDisplay(type);
+    }
+
+    function updateTransactionTypeDisplay(type) {
+        const displayDiv = $('#transactionTypeDisplay');
+        if (type == 'in') {
+            displayDiv.removeClass('alert-danger').addClass('alert-success');
+            displayDiv.html('<i data-feather="arrow-down" class="mr-1"></i> <strong>Stock In</strong> - Adding inventory to stock');
             $('#stockInFields').show();
+            $('.modal-title').html('<i data-feather="arrow-down" class="mr-1 text-success"></i> Log Stock In');
         } else {
+            displayDiv.removeClass('alert-success').addClass('alert-danger');
+            displayDiv.html('<i data-feather="arrow-up" class="mr-1"></i> <strong>Stock Out</strong> - Removing inventory from stock');
             $('#stockInFields').hide();
+            $('.modal-title').html('<i data-feather="arrow-up" class="mr-1 text-danger"></i> Log Stock Out');
         }
+        if (feather) {
+            feather.replace();
+        }
+    }
+
+    // Set default to 'in' when modal opens without button click
+    $('#stockModal').on('show.bs.modal', function(e) {
+        const type = $('#stockTransactionType').val() || 'in';
+        updateTransactionTypeDisplay(type);
     });
 });
 </script>

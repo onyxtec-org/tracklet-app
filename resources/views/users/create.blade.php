@@ -39,9 +39,16 @@
                         </div>
                     </div>
 
-                    <div class="alert alert-info">
-                        <i data-feather="info" class="mr-1"></i>
-                        <strong>Note:</strong> A random password will be generated and sent to the user via email. The user will be required to change their password on first login.
+                    <div class="alert alert-info border-left-3 border-left-info shadow-sm">
+                        <div class="alert-body">
+                            <div class="d-flex align-items-start">
+                                <i data-feather="info" class="font-medium-3 mr-2 mt-25"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1 font-weight-bolder">Important Note</h6>
+                                    <p class="mb-0">A random password will be generated and sent to the user via email. The user will be required to change their password on first login.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">

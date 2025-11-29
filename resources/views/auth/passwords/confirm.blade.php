@@ -15,10 +15,10 @@
     <div class="card mb-0">
       <div class="card-body">
         <a href="javascript:void(0);" class="brand-logo">
-          <img src="{{asset('images/logo/LOGO.svg')}}" alt="Mary Kay">
+          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet">
         </a>
 
-        <h4 class="card-title mb-1">Welcome to Mary Kay! 👋</h4>
+        <h4 class="card-title mb-1">Welcome to TrackLet! 👋</h4>
         <p class="card-text mb-2">Please confirm your password before continuing.</p>
 
         <form class="auth-login-form mt-2" method="POST" action="{{ route('password.confirm') }}">

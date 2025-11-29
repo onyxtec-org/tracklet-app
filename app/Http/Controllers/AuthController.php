@@ -16,14 +16,40 @@ class AuthController extends Controller
     use ApiResponse;
 
     /**
-     * Register new organization and create admin account
-     * Returns token for API requests
+     * @OA\Post(
+     *     path="/api/register",
+     *     summary="Register new organization",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"organization_name", "name", "email", "password", "password_confirmation"},
+     *             @OA\Property(property="organization_name", type="string", example="Acme Corp"),
+     *             @OA\Property(property="name", type="string", example="John Doe"),
+     *             @OA\Property(property="email", type="string", format="email", example="admin@acme.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Organization registered successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="token", type="string", example="1|abc123..."),
+     *                 @OA\Property(property="user", type="object"),
+     *                 @OA\Property(property="organization", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
      */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'organization_name' => 'required|string|max:255',
-            'organization_slug' => 'nullable|string|max:255|unique:organizations,slug|regex:/^[a-z0-9-]+$/',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email|unique:organizations,email',
             'password' => 'required|string|min:8|confirmed',
@@ -34,8 +60,8 @@ class AuthController extends Controller
         }
 
         try {
-            // Generate slug if not provided
-            $slug = $request->organization_slug ?? Str::slug($request->organization_name);
+            // Generate slug from organization name
+            $slug = Str::slug($request->organization_name);
 
             // Ensure slug is unique
             $baseSlug = $slug;
@@ -102,8 +128,32 @@ class AuthController extends Controller
     }
 
     /**
-     * Login user
-     * Returns token for API requests
+     * @OA\Post(
+     *     path="/api/login",
+     *     summary="Login user",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "password"},
+     *             @OA\Property(property="email", type="string", format="email", example="admin@acme.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login successful",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="token", type="string", example="1|abc123..."),
+     *                 @OA\Property(property="user", type="object"),
+     *                 @OA\Property(property="must_change_password", type="boolean", example=false)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Invalid credentials")
+     * )
      */
     public function login(Request $request)
     {
@@ -154,8 +204,13 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout user
-     * Revokes token for API requests
+     * @OA\Post(
+     *     path="/api/logout",
+     *     summary="Logout user",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="Logged out successfully")
+     * )
      */
     public function logout(Request $request)
     {
@@ -178,7 +233,28 @@ class AuthController extends Controller
     }
 
     /**
-     * Get authenticated user
+     * @OA\Get(
+     *     path="/api/user",
+     *     summary="Get current user",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="User data",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="user", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="admin@acme.com"),
+     *                     @OA\Property(property="organization", type="object")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
      */
     public function user(Request $request)
     {
@@ -214,7 +290,22 @@ class AuthController extends Controller
     }
 
     /**
-     * Change password (for users who must change password)
+     * @OA\Post(
+     *     path="/api/change-password",
+     *     summary="Change password",
+     *     tags={"Authentication"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"current_password", "password", "password_confirmation"},
+     *             @OA\Property(property="current_password", type="string", format="password"),
+     *             @OA\Property(property="password", type="string", format="password"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Password changed successfully")
+     * )
      */
     public function changePassword(Request $request)
     {

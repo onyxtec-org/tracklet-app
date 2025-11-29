@@ -18,7 +18,13 @@ class OrganizationController extends Controller
     use ApiResponse;
 
     /**
-     * Display a listing of organizations.
+     * @OA\Get(
+     *     path="/api/super-admin/organizations",
+     *     summary="List organizations (Super Admin)",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="List of organizations")
+     * )
      */
     public function index()
     {
@@ -42,10 +48,48 @@ class OrganizationController extends Controller
                         }
                     }
                     
+                    // Determine overall status
+                    $overallStatus = 'pending';
+                    $overallStatusLabel = 'Pending';
+                    
+                    if ($org->registration_source === 'self_registered') {
+                        if ($org->is_subscribed) {
+                            $overallStatus = 'subscribed';
+                            $overallStatusLabel = 'Subscribed';
+                        } elseif ($org->users->count() > 0) {
+                            $overallStatus = 'joined';
+                            $overallStatusLabel = 'Joined (Not Subscribed)';
+                        } else {
+                            $overallStatus = 'registered';
+                            $overallStatusLabel = 'Registered';
+                        }
+                    } else {
+                        // Invited organizations
+                        if ($org->is_subscribed) {
+                            $overallStatus = 'subscribed';
+                            $overallStatusLabel = 'Subscribed';
+                        } elseif ($invitationStatus === 'joined') {
+                            $overallStatus = 'joined';
+                            $overallStatusLabel = 'Joined (Not Subscribed)';
+                        } elseif ($invitationStatus === 'pending') {
+                            $overallStatus = 'pending';
+                            $overallStatusLabel = 'Pending Invitation';
+                        } elseif ($invitationStatus === 'expired') {
+                            $overallStatus = 'expired';
+                            $overallStatusLabel = 'Invitation Expired';
+                        } else {
+                            $overallStatus = 'pending';
+                            $overallStatusLabel = 'Pending';
+                        }
+                    }
+                    
                     // Get admin user
                     $admin = $org->users->first(function ($user) {
                         return $user->hasRole('admin');
                     });
+                    
+                    // Check if on trial
+                    $isOnTrial = $org->trial_ends_at && $org->trial_ends_at->isFuture();
                     
                     return [
                         'id' => $org->id,
@@ -54,15 +98,21 @@ class OrganizationController extends Controller
                         'admin' => $admin ? ['name' => $admin->name, 'email' => $admin->email] : null,
                         'is_active' => $org->is_active,
                         'is_subscribed' => $org->is_subscribed,
+                        'is_on_trial' => $isOnTrial,
                         'registration_source' => $org->registration_source ?? 'invited',
                         'invitation_status' => $invitationStatus,
+                        'overall_status' => $overallStatus,
+                        'overall_status_label' => $overallStatusLabel,
                         'invitation_sent_at' => $latestInvitation ? $latestInvitation->created_at : null,
                         'invitation_accepted_at' => $latestInvitation ? $latestInvitation->accepted_at : null,
                         'created_at' => $org->created_at,
                     ];
                 });
 
-            return $this->respond(['data' => $organizations]);
+            return response()->json([
+                'success' => true,
+                'data' => $organizations,
+            ]);
         }
 
         $organizations = Organization::with(['users.roles', 'invitations'])
@@ -88,7 +138,21 @@ class OrganizationController extends Controller
     }
 
     /**
-     * Store a newly created organization and send invitation.
+     * @OA\Post(
+     *     path="/api/super-admin/organizations",
+     *     summary="Create organization (Super Admin)",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "email"},
+     *             @OA\Property(property="name", type="string", example="Acme Corp"),
+     *             @OA\Property(property="email", type="string", format="email", example="admin@acme.com")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Organization created and invitation sent")
+     * )
      */
     public function store(Request $request)
     {
@@ -147,7 +211,14 @@ class OrganizationController extends Controller
     }
 
     /**
-     * Display the specified organization.
+     * @OA\Get(
+     *     path="/api/super-admin/organizations/{id}",
+     *     summary="Get organization (Super Admin)",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Organization details")
+     * )
      */
     public function show(Organization $organization)
     {
@@ -173,7 +244,23 @@ class OrganizationController extends Controller
     }
 
     /**
-     * Update the specified organization.
+     * @OA\Put(
+     *     path="/api/super-admin/organizations/{id}",
+     *     summary="Update organization (Super Admin)",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name"},
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="is_active", type="boolean")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Organization updated successfully")
+     * )
      */
     public function update(Request $request, Organization $organization)
     {
@@ -201,7 +288,14 @@ class OrganizationController extends Controller
     }
 
     /**
-     * Remove the specified organization.
+     * @OA\Delete(
+     *     path="/api/super-admin/organizations/{id}",
+     *     summary="Delete organization (Super Admin)",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Organization deleted successfully")
+     * )
      */
     public function destroy(Organization $organization)
     {
@@ -213,7 +307,14 @@ class OrganizationController extends Controller
     }
 
     /**
-     * Resend invitation to organization admin
+     * @OA\Post(
+     *     path="/api/super-admin/organizations/{id}/resend-invitation",
+     *     summary="Resend invitation (Super Admin)",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Invitation resent successfully")
+     * )
      */
     public function resendInvitation(Organization $organization)
     {

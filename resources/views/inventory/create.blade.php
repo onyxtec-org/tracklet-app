@@ -42,9 +42,10 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>Quantity <span class="text-danger">*</span></label>
+                                <label>Initial Quantity <span class="text-danger">*</span></label>
                                 <input type="number" name="quantity" min="0" class="form-control @error('quantity') is-invalid @enderror" 
                                        value="{{ old('quantity', 0) }}" required>
+                                <small class="text-muted">Starting stock quantity. Use Stock In/Out to track changes after creation.</small>
                                 @error('quantity')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -90,6 +91,22 @@
                                 @error('unit_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-left-3 border-left-info mb-3 shadow-sm">
+                        <div class="alert-body">
+                            <div class="d-flex align-items-start">
+                                <i data-feather="info" class="font-medium-3 mr-2 mt-25"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1 font-weight-bolder">How Stock Tracking Works</h6>
+                                    <p class="mb-0 small">
+                                        <strong>Initial Quantity:</strong> Set the starting stock when creating the item.<br>
+                                        <strong>After Creation:</strong> Use <strong>Stock In</strong> to add more inventory (purchases) or <strong>Stock Out</strong> to remove inventory (usage/consumption). 
+                                        All transactions are tracked automatically and the quantity updates in real-time.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

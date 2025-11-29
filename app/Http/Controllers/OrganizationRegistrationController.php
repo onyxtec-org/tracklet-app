@@ -34,7 +34,6 @@ class OrganizationRegistrationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'organization_name' => 'required|string|max:255',
-            'organization_slug' => 'nullable|string|max:255|unique:organizations,slug|regex:/^[a-z0-9-]+$/',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email|unique:organizations,email',
             'password' => 'required|string|min:8|confirmed',
@@ -47,8 +46,8 @@ class OrganizationRegistrationController extends Controller
         try {
             DB::beginTransaction();
 
-            // Generate slug if not provided
-            $slug = $request->organization_slug ?? Str::slug($request->organization_name);
+            // Generate slug from organization name
+            $slug = Str::slug($request->organization_name);
 
             // Ensure slug is unique
             $baseSlug = $slug;

@@ -27,6 +27,7 @@
                         <th>Email</th>
                         <th>Admin</th>
                         <th>Source</th>
+                        <th>Status</th>
                         <th>Invitation Status</th>
                         <th>Subscription</th>
                         <th>Created</th>
@@ -54,12 +55,30 @@ $(function() {
         serverSide: false,
         ajax: {
             url: '{{ route("superadmin.organizations.index") }}',
+            type: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            xhrFields: {
+                withCredentials: true
             },
             dataSrc: function(json) {
-                return json.success && json.data ? json.data : [];
+                console.log('Organizations data:', json);
+                if (json.success && json.data) {
+                    return json.data;
+                }
+                console.error('No data received:', json);
+                return [];
+            },
+            error: function(xhr, error, thrown) {
+                console.error('AJAX Error:', error, thrown);
+                console.error('Response:', xhr.responseText);
+                console.error('Status:', xhr.status);
+                if (xhr.status === 401) {
+                    alert('Session expired. Please refresh the page and login again.');
+                }
             }
         },
         columns: [
@@ -82,6 +101,19 @@ $(function() {
                 }
             },
             {
+                data: 'overall_status',
+                render: function(data, type, row) {
+                    const statusMap = {
+                        'pending': '<span class="badge badge-light-warning">Pending Invitation</span>',
+                        'joined': '<span class="badge badge-light-info">Joined (Not Subscribed)</span>',
+                        'subscribed': '<span class="badge badge-light-success">Subscribed' + (row.is_on_trial ? ' (Trial)' : '') + '</span>',
+                        'expired': '<span class="badge badge-light-danger">Invitation Expired</span>',
+                        'registered': '<span class="badge badge-light-primary">Registered</span>'
+                    };
+                    return statusMap[data] || '<span class="badge badge-light-secondary">-</span>';
+                }
+            },
+            {
                 data: 'invitation_status',
                 render: function(data, type, row) {
                     // For self-registered organizations, show "N/A"
@@ -97,21 +129,14 @@ $(function() {
                     return statusMap[data] || '<span class="badge badge-light-secondary">-</span>';
                 }
             },
-                render: function(data, type, row) {
-                    const statusMap = {
-                        'none': '<span class="badge badge-light-secondary">No Invitation</span>',
-                        'pending': '<span class="badge badge-light-warning">Pending</span>',
-                        'joined': '<span class="badge badge-light-info">Joined</span>',
-                        'expired': '<span class="badge badge-light-danger">Expired</span>'
-                    };
-                    return statusMap[data] || '<span class="badge badge-light-secondary">-</span>';
-                }
-            },
             {
                 data: 'is_subscribed',
                 render: function(data, type, row) {
                     if (data) {
-                        return '<span class="badge badge-light-success">Subscribed</span>';
+                        if (row.is_on_trial) {
+                            return '<span class="badge badge-light-info">Active (Trial)</span>';
+                        }
+                        return '<span class="badge badge-light-success">Active</span>';
                     }
                     return '<span class="badge badge-light-warning">Not Subscribed</span>';
                 }
@@ -140,6 +165,13 @@ $(function() {
                             <a href="/super-admin/organizations/${row.id}/edit" class="btn btn-sm btn-icon" data-toggle="tooltip" title="Edit">
                                 ${feather.icons['edit'].toSvg({ class: 'font-small-4' })}
                             </a>
+                            <form action="/super-admin/organizations/${row.id}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this organization? This will permanently delete all associated data. This action cannot be undone!');">
+                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="btn btn-sm btn-icon text-danger" data-toggle="tooltip" title="Delete">
+                                    ${feather.icons['trash-2'].toSvg({ class: 'font-small-4' })}
+                                </button>
+                            </form>
                         </div>
                     `;
                 }

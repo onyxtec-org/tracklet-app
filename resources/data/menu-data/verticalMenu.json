@@ -4,54 +4,62 @@
       "url": "/",
       "name": "Dashboard",
       "icon": "home",
-      "slug": "dashboard.index"
+      "slug": "dashboard.index",
+      "roles": ["super_admin", "admin", "finance", "admin_support", "general_staff"]
     },
     {
       "url": "/super-admin/organizations",
       "name": "Organizations",
       "icon": "briefcase",
       "slug": "superadmin.organizations.index",
-      "role": "super_admin"
+      "roles": ["super_admin"]
     },
     {
-      "navheader": "Administration"
+      "navheader": "Administration",
+      "roles": ["super_admin", "admin"]
     },
     {
       "url": "/users",
       "name": "User Management",
       "icon": "users",
       "slug": "users",
-      "role": "admin"
+      "roles": ["admin"]
     },
     {
-      "navheader": "Finance"
+      "navheader": "Finance",
+      "roles": ["super_admin", "admin", "finance"]
     },
     {
       "url": "/expenses",
       "name": "Expense Tracking",
       "icon": "dollar-sign",
-      "slug": "expenses"
+      "slug": "expenses",
+      "roles": ["admin", "finance"]
     },
     {
-      "navheader": "Operations"
+      "navheader": "Operations",
+      "roles": ["super_admin", "admin", "admin_support"]
     },
     {
       "url": "/inventory/items",
       "name": "Inventory Management",
       "icon": "package",
-      "slug": "inventory"
+      "slug": "inventory",
+      "roles": ["admin", "admin_support"]
     },
     {
       "url": "/assets",
       "name": "Asset Management",
       "icon": "layers",
-      "slug": "assets"
+      "slug": "assets",
+      "roles": ["admin", "admin_support"]
     },
     {
       "url": "/maintenance",
       "name": "Repair & Maintenance",
       "icon": "tool",
-      "slug": "maintenance"
+      "slug": "maintenance",
+      "roles": ["admin", "admin_support"]
     }
   ]
 }

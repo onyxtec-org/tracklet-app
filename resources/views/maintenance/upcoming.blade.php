@@ -15,9 +15,16 @@
                 </a>
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
-                    <i data-feather="calendar" class="mr-1"></i>
-                    <strong>Upcoming:</strong> Maintenance scheduled within the next 7 days.
+                <div class="alert alert-info border-left-3 border-left-info shadow-sm">
+                    <div class="alert-body">
+                        <div class="d-flex align-items-start">
+                            <i data-feather="calendar" class="font-medium-3 mr-2 mt-25"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1 font-weight-bolder">Upcoming Maintenance</h6>
+                                <p class="mb-0">Maintenance scheduled within the next 7 days.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-responsive">

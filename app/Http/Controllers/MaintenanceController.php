@@ -13,7 +13,17 @@ class MaintenanceController extends Controller
     use ApiResponse;
 
     /**
-     * Display a listing of maintenance records.
+     * @OA\Get(
+     *     path="/api/maintenance",
+     *     summary="List maintenance records",
+     *     tags={"Maintenance"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="status", in="query", @OA\Schema(type="string", enum={"pending", "in_progress", "completed", "cancelled"})),
+     *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"scheduled", "repair", "inspection", "other"})),
+     *     @OA\Parameter(name="asset_id", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="upcoming", in="query", @OA\Schema(type="boolean")),
+     *     @OA\Response(response=200, description="List of maintenance records")
+     * )
      */
     public function index(Request $request)
     {
@@ -109,7 +119,27 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Store a newly created maintenance record.
+     * @OA\Post(
+     *     path="/api/maintenance",
+     *     summary="Create maintenance record",
+     *     tags={"Maintenance"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"asset_id", "type", "scheduled_date", "description"},
+     *             @OA\Property(property="asset_id", type="integer", example=1),
+     *             @OA\Property(property="type", type="string", enum={"scheduled", "repair", "inspection", "other"}, example="scheduled"),
+     *             @OA\Property(property="scheduled_date", type="string", format="date", example="2025-12-01"),
+     *             @OA\Property(property="description", type="string", example="Monthly maintenance check"),
+     *             @OA\Property(property="cost", type="number", format="float", example="150.00"),
+     *             @OA\Property(property="service_provider", type="string", example="Tech Services Inc"),
+     *             @OA\Property(property="next_maintenance_date", type="string", format="date"),
+     *             @OA\Property(property="notes", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Maintenance record created successfully")
+     * )
      */
     public function store(Request $request)
     {
@@ -156,7 +186,14 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Display the specified maintenance record.
+     * @OA\Get(
+     *     path="/api/maintenance/{id}",
+     *     summary="Get maintenance record",
+     *     tags={"Maintenance"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Maintenance record details")
+     * )
      */
     public function show(MaintenanceRecord $maintenanceRecord)
     {
@@ -205,7 +242,27 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Update the specified maintenance record.
+     * @OA\Put(
+     *     path="/api/maintenance/{id}",
+     *     summary="Update maintenance record",
+     *     tags={"Maintenance"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"asset_id", "type", "scheduled_date", "status", "description"},
+     *             @OA\Property(property="asset_id", type="integer"),
+     *             @OA\Property(property="type", type="string", enum={"scheduled", "repair", "inspection", "other"}),
+     *             @OA\Property(property="scheduled_date", type="string", format="date"),
+     *             @OA\Property(property="status", type="string", enum={"pending", "in_progress", "completed", "cancelled"}),
+     *             @OA\Property(property="completed_date", type="string", format="date"),
+     *             @OA\Property(property="description", type="string"),
+     *             @OA\Property(property="cost", type="number", format="float")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Maintenance record updated successfully")
+     * )
      */
     public function update(Request $request, MaintenanceRecord $maintenanceRecord)
     {
@@ -248,7 +305,14 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Remove the specified maintenance record.
+     * @OA\Delete(
+     *     path="/api/maintenance/{id}",
+     *     summary="Delete maintenance record",
+     *     tags={"Maintenance"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Maintenance record deleted successfully")
+     * )
      */
     public function destroy(MaintenanceRecord $maintenanceRecord)
     {
@@ -266,7 +330,13 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Get upcoming maintenance (next 7 days)
+     * @OA\Get(
+     *     path="/api/maintenance/upcoming",
+     *     summary="Get upcoming maintenance",
+     *     tags={"Maintenance"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="Upcoming maintenance (next 7 days)")
+     * )
      */
     public function upcoming()
     {

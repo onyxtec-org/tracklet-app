@@ -12,7 +12,13 @@ class ExpenseCategoryController extends Controller
     use ApiResponse;
 
     /**
-     * Display a listing of expense categories.
+     * @OA\Get(
+     *     path="/api/expenses/categories",
+     *     summary="List expense categories",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="List of categories")
+     * )
      */
     public function index()
     {
@@ -34,7 +40,21 @@ class ExpenseCategoryController extends Controller
     }
 
     /**
-     * Store a newly created expense category.
+     * @OA\Post(
+     *     path="/api/expenses/categories",
+     *     summary="Create expense category",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name"},
+     *             @OA\Property(property="name", type="string", example="Office Supplies"),
+     *             @OA\Property(property="description", type="string", example="Office related expenses")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Category created successfully")
+     * )
      */
     public function store(Request $request)
     {
@@ -63,7 +83,22 @@ class ExpenseCategoryController extends Controller
     }
 
     /**
-     * Update the specified expense category.
+     * @OA\Put(
+     *     path="/api/expenses/categories/{id}",
+     *     summary="Update expense category",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name"},
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="description", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Category updated successfully")
+     * )
      */
     public function update(Request $request, ExpenseCategory $expenseCategory)
     {
@@ -91,7 +126,14 @@ class ExpenseCategoryController extends Controller
     }
 
     /**
-     * Remove the specified expense category.
+     * @OA\Delete(
+     *     path="/api/expenses/categories/{id}",
+     *     summary="Delete expense category",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Category deleted successfully")
+     * )
      */
     public function destroy(ExpenseCategory $expenseCategory)
     {

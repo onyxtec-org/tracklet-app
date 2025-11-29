@@ -40,9 +40,16 @@
                         </div>
                     </div>
 
-                    <div class="alert alert-warning">
-                        <i data-feather="alert-triangle" class="mr-1"></i>
-                        <strong>Password:</strong> To reset a user's password, delete and recreate the user. The new user will receive a random password via email.
+                    <div class="alert alert-warning border-left-3 border-left-warning shadow-sm">
+                        <div class="alert-body">
+                            <div class="d-flex align-items-start">
+                                <i data-feather="alert-triangle" class="font-medium-3 mr-2 mt-25"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1 font-weight-bolder">Password Reset</h6>
+                                    <p class="mb-0">To reset a user's password, delete and recreate the user. The new user will receive a random password via email.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">

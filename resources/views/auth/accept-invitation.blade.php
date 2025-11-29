@@ -14,18 +14,34 @@
             </div>
             <div class="card-body">
                 @if($invitation->isExpired())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="alert alert-danger border-left-3 border-left-danger alert-dismissible fade show shadow-sm" role="alert">
                         <div class="alert-body">
-                            <i data-feather="alert-circle" class="mr-50 align-middle"></i>
-                            <span>This invitation has expired. Please contact the organization administrator for a new invitation.</span>
+                            <div class="d-flex align-items-start">
+                                <i data-feather="alert-circle" class="font-medium-3 mr-2 mt-25"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1 font-weight-bolder">Invitation Expired</h6>
+                                    <p class="mb-0">This invitation has expired. Please contact the organization administrator for a new invitation.</p>
+                                </div>
+                            </div>
                         </div>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                 @elseif($invitation->isAccepted())
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <div class="alert alert-warning border-left-3 border-left-warning alert-dismissible fade show shadow-sm" role="alert">
                         <div class="alert-body">
-                            <i data-feather="alert-triangle" class="mr-50 align-middle"></i>
-                            <span>This invitation has already been accepted.</span>
+                            <div class="d-flex align-items-start">
+                                <i data-feather="alert-triangle" class="font-medium-3 mr-2 mt-25"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-1 font-weight-bolder">Already Accepted</h6>
+                                    <p class="mb-0">This invitation has already been accepted.</p>
+                                </div>
+                            </div>
                         </div>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                 @else
                     <form method="POST" action="{{ route('organization.invitation.accept', $invitation->token) }}" class="auth-login-form">

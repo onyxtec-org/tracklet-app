@@ -19,7 +19,18 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Category <span class="text-danger">*</span></label>
-                                <select name="expense_category_id" class="form-control @error('expense_category_id') is-invalid @enderror" required>
+                                <div class="mb-2">
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="category_existing" name="category_type" value="existing" class="custom-control-input" checked>
+                                        <label class="custom-control-label" for="category_existing">Select Existing</label>
+                                    </div>
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="category_new" name="category_type" value="new" class="custom-control-input">
+                                        <label class="custom-control-label" for="category_new">Create New</label>
+                                    </div>
+                                </div>
+                                
+                                <select name="expense_category_id" id="expense_category_id" class="form-control @error('expense_category_id') is-invalid @enderror">
                                     <option value="">Select Category</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->id }}" {{ old('expense_category_id') == $category->id ? 'selected' : '' }}>
@@ -27,9 +38,17 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                
+                                <input type="text" name="category_name" id="category_name" class="form-control @error('category_name') is-invalid @enderror" 
+                                       placeholder="Enter new category name" style="display: none;" value="{{ old('category_name') }}">
+                                
                                 @error('expense_category_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                @error('category_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">If category doesn't exist, select "Create New" and enter the category name.</small>
                             </div>
                         </div>
 
@@ -111,6 +130,22 @@ $(function() {
     if (feather) {
         feather.replace({ width: 14, height: 14 });
     }
+    
+    // Handle category type toggle
+    $('input[name="category_type"]').on('change', function() {
+        if ($(this).val() === 'new') {
+            $('#expense_category_id').hide().prop('required', false);
+            $('#category_name').show().prop('required', true).focus();
+        } else {
+            $('#category_name').hide().prop('required', false).val('');
+            $('#expense_category_id').show().prop('required', true);
+        }
+    });
+    
+    // Set initial state based on old input
+    @if(old('category_type') === 'new' || old('category_name'))
+        $('#category_new').prop('checked', true).trigger('change');
+    @endif
 });
 </script>
 @endsection

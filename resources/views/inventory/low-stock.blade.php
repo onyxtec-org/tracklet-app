@@ -15,9 +15,16 @@
                 </a>
             </div>
             <div class="card-body">
-                <div class="alert alert-warning">
-                    <i data-feather="alert-triangle" class="mr-1"></i>
-                    <strong>Warning:</strong> The following items are below their minimum threshold and may need to be restocked.
+                <div class="alert alert-warning border-left-3 border-left-warning shadow-sm">
+                    <div class="alert-body">
+                        <div class="d-flex align-items-start">
+                            <i data-feather="alert-triangle" class="font-medium-3 mr-2 mt-25"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1 font-weight-bolder">Low Stock Warning</h6>
+                                <p class="mb-0">The following items are below their minimum threshold and may need to be restocked.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="table-responsive">

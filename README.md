@@ -630,9 +630,19 @@ php artisan tinker
 
 ## 📱 API Documentation
 
+### Interactive Swagger UI
+Visit `/api/documentation` in your browser for interactive API documentation with:
+- Complete list of all endpoints
+- Request/response examples
+- Try it out functionality - test APIs directly from the browser
+- Authentication support - add Bearer token to test authenticated endpoints
+- Schema definitions for all models
+
+### Static Documentation
 Complete API documentation for mobile developers is available:
 
 - **API_DOCUMENTATION.md** - Comprehensive API documentation with all endpoints, request/response formats, and examples
+- **FEATURES_AND_API.md** - Concise API reference with all endpoints and their request/response formats
 - **API_QUICK_REFERENCE.md** - Quick reference guide for common endpoints
 - **TESTING_GUIDE.md** - Complete testing guide with step-by-step instructions
 

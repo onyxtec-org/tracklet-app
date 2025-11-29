@@ -13,7 +13,13 @@ class SubscriptionController extends Controller
     use ApiResponse;
 
     /**
-     * Show subscription checkout page
+     * @OA\Get(
+     *     path="/api/subscription/checkout",
+     *     summary="Get checkout page",
+     *     tags={"Subscription"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="Checkout page data")
+     * )
      */
     public function checkout()
     {
@@ -33,15 +39,62 @@ class SubscriptionController extends Controller
             ]);
         }
 
+        // Get pricing information from Stripe
+        $priceInfo = null;
+        $priceId = config('services.stripe.price_id');
+        
+        if ($priceId) {
+            try {
+                \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+                $price = \Stripe\Price::retrieve($priceId);
+                
+                // Calculate monthly and annual prices
+                $amount = $price->unit_amount / 100; // Convert from cents
+                $currency = strtoupper($price->currency);
+                $interval = $price->recurring->interval ?? 'year';
+                $intervalCount = $price->recurring->interval_count ?? 1;
+                
+                // Calculate monthly equivalent for annual plans
+                $monthlyPrice = $interval === 'year' ? round($amount / 12, 2) : $amount;
+                $annualPrice = $interval === 'year' ? $amount : ($amount * 12);
+                
+                $priceInfo = [
+                    'amount' => $amount,
+                    'monthly_price' => $monthlyPrice,
+                    'annual_price' => $annualPrice,
+                    'currency' => $currency,
+                    'currency_symbol' => $currency === 'USD' ? '$' : $currency,
+                    'interval' => $interval,
+                    'interval_count' => $intervalCount,
+                    'formatted_monthly' => $currency === 'USD' ? '$' . number_format($monthlyPrice, 2) : number_format($monthlyPrice, 2) . ' ' . $currency,
+                    'formatted_annual' => $currency === 'USD' ? '$' . number_format($annualPrice, 2) : number_format($annualPrice, 2) . ' ' . $currency,
+                ];
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch Stripe price: ' . $e->getMessage());
+                // Continue without price info - will show default
+            }
+        }
+
         return $this->respond(
-            ['organization' => $organization],
+            ['organization' => $organization, 'price_info' => $priceInfo],
             'subscription.checkout',
-            ['organization' => $organization]
+            ['organization' => $organization, 'priceInfo' => $priceInfo]
         );
     }
 
     /**
-     * Create Stripe Checkout Session
+     * @OA\Post(
+     *     path="/api/subscription/checkout",
+     *     summary="Create Stripe checkout session",
+     *     tags={"Subscription"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         @OA\JsonContent(
+     *             @OA\Property(property="price_id", type="string", example="price_xxxxx")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Checkout session created", @OA\JsonContent(@OA\Property(property="checkout_url", type="string")))
+     * )
      */
     public function createCheckoutSession(Request $request)
     {

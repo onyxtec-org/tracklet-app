@@ -5,6 +5,23 @@
 @section('page-style')
 {{-- Page Css files --}}
 <link rel="stylesheet" href="{{ asset(mix('css/base/pages/page-auth.css')) }}">
+<style>
+  .brand-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+  }
+  .brand-logo img {
+    max-width: 150px;
+    max-height: 80px;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+</style>
 @endsection
 
 @section('content')
@@ -14,10 +31,10 @@
     <div class="card mb-0">
       <div class="card-body">
         <a href="javascript:void(0);" class="brand-logo">
-          <img src="{{asset('images/logo/LOGO.svg')}}" alt="Mary Kay">
+          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet">
         </a>
 
-        <h4 class="card-title mb-1">Welcome to Mary Kay! 👋</h4>
+        <h4 class="card-title mb-1">Welcome to TrackLet! 👋</h4>
         <p class="card-text mb-2">Please sign-in to your account and start the adventure</p>
 
         <form class="auth-login-form mt-2" method="POST" action="{{ route('login') }}">

@@ -59,20 +59,22 @@ Route::group(['middleware' => 'auth'], function () {
 });
 
 Route::group(['middleware' => ['auth', 'require.password.change']], function () {
-    // Dashboard Routes
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
-    
-    // Profile Routes
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile/password', [ProfileController::class, 'updatePasswordProfile'])->name('password.profile.update');
-    
-    // Subscription Routes
+    // Subscription Routes (accessible without subscription)
     Route::get('/subscription/checkout', [SubscriptionController::class, 'checkout'])
         ->name('subscription.checkout');
     Route::post('/subscription/checkout', [SubscriptionController::class, 'createCheckoutSession'])
         ->name('subscription.checkout.create');
     Route::get('/subscription/success', [SubscriptionController::class, 'success'])
         ->name('subscription.success');
+    
+    // Profile Routes (accessible without subscription)
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile/password', [ProfileController::class, 'updatePasswordProfile'])->name('password.profile.update');
+    
+    // Dashboard Routes (requires subscription, except for super admin)
+    Route::get('/', [DashboardController::class, 'index'])
+        ->middleware('subscribed')
+        ->name('dashboard.index');
     
     // Super Admin Routes
     Route::group(['middleware' => 'role:super_admin', 'prefix' => 'super-admin', 'as' => 'superadmin.'], function () {
@@ -101,13 +103,15 @@ Route::group(['middleware' => ['auth', 'require.password.change']], function () 
             Route::get('/', [ExpenseController::class, 'index'])->name('index');
             Route::get('create', [ExpenseController::class, 'create'])->name('create');
             Route::post('/', [ExpenseController::class, 'store'])->name('store');
+            // Specific routes must come before resource routes to avoid route conflicts
+            Route::get('reports', [ExpenseController::class, 'reports'])->name('reports');
+            Route::get('charts', [ExpenseController::class, 'charts'])->name('charts');
+            Route::get('export', [ExpenseController::class, 'export'])->name('export');
+            // Resource routes
             Route::get('{expense}', [ExpenseController::class, 'show'])->name('show');
             Route::get('{expense}/edit', [ExpenseController::class, 'edit'])->name('edit');
             Route::put('{expense}', [ExpenseController::class, 'update'])->name('update');
             Route::delete('{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
-            Route::get('reports', [ExpenseController::class, 'reports'])->name('reports');
-            Route::get('charts', [ExpenseController::class, 'charts'])->name('charts');
-            Route::get('export', [ExpenseController::class, 'export'])->name('export');
         });
         
         // Inventory Management Module (Admin Support role)
@@ -137,11 +141,13 @@ Route::group(['middleware' => ['auth', 'require.password.change']], function () 
             Route::get('/', [MaintenanceController::class, 'index'])->name('index');
             Route::get('create', [MaintenanceController::class, 'create'])->name('create');
             Route::post('/', [MaintenanceController::class, 'store'])->name('store');
+            // Specific routes must come before resource routes to avoid route conflicts
+            Route::get('upcoming', [MaintenanceController::class, 'upcoming'])->name('upcoming');
+            // Resource routes
             Route::get('{maintenanceRecord}', [MaintenanceController::class, 'show'])->name('show');
             Route::get('{maintenanceRecord}/edit', [MaintenanceController::class, 'edit'])->name('edit');
             Route::put('{maintenanceRecord}', [MaintenanceController::class, 'update'])->name('update');
             Route::delete('{maintenanceRecord}', [MaintenanceController::class, 'destroy'])->name('destroy');
-            Route::get('upcoming', [MaintenanceController::class, 'upcoming'])->name('upcoming');
         });
         
         // General Staff - Read-only access

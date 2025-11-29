@@ -6,6 +6,9 @@ use App\Models\Expense;
 use App\Models\InventoryItem;
 use App\Models\Asset;
 use App\Models\MaintenanceRecord;
+use App\Models\Organization;
+use App\Models\User;
+use App\Models\OrganizationInvitation;
 use Illuminate\Http\Request;
 use App\Traits\ApiResponse;
 use Carbon\Carbon;
@@ -14,6 +17,15 @@ class DashboardController extends Controller
 {
     use ApiResponse;
 
+    /**
+     * @OA\Get(
+     *     path="/api/dashboard",
+     *     summary="Get dashboard data",
+     *     tags={"Dashboard"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="Dashboard data (varies by user role)")
+     * )
+     */
     public function index()
     {
         $breadcrumbs = [
@@ -29,8 +41,62 @@ class DashboardController extends Controller
         $assetSummary = null;
         $upcomingMaintenance = null;
         $expenseCharts = null;
+        $superAdminStats = null;
         
-        if ($organization) {
+        // Super Admin Dashboard Stats - ONLY for Super Admin
+        if ($user->isSuperAdmin()) {
+            $totalOrganizations = Organization::count();
+            $subscribedOrganizations = Organization::where('is_subscribed', true)
+                ->orWhere(function($query) {
+                    $query->whereNotNull('trial_ends_at')
+                          ->where('trial_ends_at', '>', now());
+                })
+                ->count();
+            $trialOrganizations = Organization::whereNotNull('trial_ends_at')
+                ->where('trial_ends_at', '>', now())
+                ->count();
+            $activeSubscriptions = Organization::where('is_subscribed', true)
+                ->where(function($query) {
+                    $query->whereNull('subscription_ends_at')
+                          ->orWhere('subscription_ends_at', '>', now());
+                })
+                ->count();
+            
+            $totalUsers = User::whereHas('roles', function($q) {
+                $q->where('name', '!=', 'super_admin');
+            })->count();
+            
+            $pendingInvitations = OrganizationInvitation::whereNull('accepted_at')
+                ->where('expires_at', '>', now())
+                ->count();
+            
+            $expiredInvitations = OrganizationInvitation::whereNull('accepted_at')
+                ->where('expires_at', '<=', now())
+                ->count();
+            
+            $recentOrganizations = Organization::orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+            
+            $organizationsBySource = [
+                'invited' => Organization::where('registration_source', 'invited')->count(),
+                'self_registered' => Organization::where('registration_source', 'self_registered')->count(),
+            ];
+            
+            $superAdminStats = [
+                'total_organizations' => $totalOrganizations,
+                'subscribed_organizations' => $subscribedOrganizations,
+                'trial_organizations' => $trialOrganizations,
+                'active_subscriptions' => $activeSubscriptions,
+                'total_users' => $totalUsers,
+                'pending_invitations' => $pendingInvitations,
+                'expired_invitations' => $expiredInvitations,
+                'recent_organizations' => $recentOrganizations,
+                'organizations_by_source' => $organizationsBySource,
+            ];
+        }
+        // Organization Dashboard Stats - ONLY for non-Super Admin users
+        elseif ($organization) {
             $trialInfo = [
                 'is_on_trial' => $organization->isOnTrial(),
                 'trial_days_remaining' => $organization->trialDaysRemaining(),
@@ -170,6 +236,7 @@ class DashboardController extends Controller
                 'asset_summary' => $assetSummary,
                 'upcoming_maintenance' => $upcomingMaintenance,
                 'expense_charts' => $expenseCharts,
+                'super_admin_stats' => $superAdminStats,
             ],
             'dashboard',
             [
@@ -181,6 +248,7 @@ class DashboardController extends Controller
                 'assetSummary' => $assetSummary,
                 'upcomingMaintenance' => $upcomingMaintenance,
                 'expenseCharts' => $expenseCharts,
+                'superAdminStats' => $superAdminStats,
             ]
         );
     }

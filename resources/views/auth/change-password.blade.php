@@ -5,6 +5,23 @@
 @section('page-style')
 {{-- Page Css files --}}
 <link rel="stylesheet" href="{{ asset(mix('css/base/pages/page-auth.css')) }}">
+<style>
+  .brand-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+  }
+  .brand-logo img {
+    max-width: 150px;
+    max-height: 80px;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+</style>
 @endsection
 
 @section('content')
@@ -14,28 +31,40 @@
     <div class="card mb-0">
       <div class="card-body">
         <a href="javascript:void(0);" class="brand-logo">
-          <img src="{{asset('images/logo/LOGO.svg')}}" alt="Mary Kay">
+          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet">
         </a>
 
         <h4 class="card-title mb-1">Change Your Password 🔒</h4>
         <p class="card-text mb-2">For security reasons, you must change your password before continuing.</p>
 
         @if (session('warning'))
-        <div class="alert alert-warning" role="alert">
+        <div class="alert alert-warning border-left-3 border-left-warning shadow-sm" role="alert">
           <div class="alert-body">
-            {{ session('warning') }}
+            <div class="d-flex align-items-start">
+              <i data-feather="alert-triangle" class="font-medium-3 mr-2 mt-25"></i>
+              <div>
+                <h6 class="alert-heading mb-1 font-weight-bolder">Warning</h6>
+                <p class="mb-0">{{ session('warning') }}</p>
+              </div>
+            </div>
           </div>
         </div>
         @endif
 
         @if ($errors->any())
-        <div class="alert alert-danger" role="alert">
+        <div class="alert alert-danger border-left-3 border-left-danger shadow-sm" role="alert">
           <div class="alert-body">
-            <ul class="mb-0">
-              @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-              @endforeach
-            </ul>
+            <div class="d-flex align-items-start">
+              <i data-feather="alert-circle" class="font-medium-3 mr-2 mt-25"></i>
+              <div class="flex-grow-1">
+                <h6 class="alert-heading mb-1 font-weight-bolder">Validation Errors</h6>
+                <ul class="mb-0 pl-1">
+                  @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                  @endforeach
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
         @endif
@@ -70,13 +99,12 @@
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>
-              <small class="form-text text-muted">Minimum 8 characters</small>
-              @error('new_password')
-              <span class="invalid-feedback" role="alert">
-                <strong>{{ $message }}</strong>
-              </span>
-              @enderror
             </div>
+            @error('new_password')
+            <span class="invalid-feedback" role="alert">
+              <strong>{{ $message }}</strong>
+            </span>
+            @enderror
           </div>
 
           <div class="form-group">

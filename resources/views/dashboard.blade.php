@@ -20,30 +20,32 @@
 @section('content')
 <!-- Dashboard Analytics Start -->
 <section id="dashboard-analytics">
-  @if(isset($trialInfo) && $trialInfo['is_on_trial'])
+  @if(!auth()->user()->isSuperAdmin() && isset($trialInfo) && $trialInfo['is_on_trial'])
   <div class="row">
     <div class="col-12">
-      <div class="alert alert-info alert-dismissible fade show" role="alert">
+      <div class="alert alert-info border-left-3 border-left-info alert-dismissible fade show shadow-sm" role="alert">
         <div class="alert-body">
-          <div class="d-flex align-items-center">
-            <i data-feather="gift" class="mr-50"></i>
-            <div>
-              <h5 class="alert-heading mb-1">🎉 You're on a Free Trial!</h5>
-              <p class="mb-0">
-                @if($trialInfo['trial_days_remaining'] > 0)
-                  You have <strong>{{ $trialInfo['trial_days_remaining'] }} day(s)</strong> remaining in your free trial.
-                  Your trial ends on <strong>{{ $trialInfo['trial_ends_at']->format('F j, Y') }}</strong>.
-                @else
-                  Your trial ends today!
-                @endif
-                After the trial, your annual subscription will begin automatically.
-              </p>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              <i data-feather="gift" class="font-medium-3 mr-2 text-info"></i>
+              <div>
+                <h6 class="alert-heading mb-1 font-weight-bolder">Free Trial Active</h6>
+                <p class="mb-0">
+                  @if($trialInfo['trial_days_remaining'] > 0)
+                    <strong>{{ $trialInfo['trial_days_remaining'] }}</strong> {{ $trialInfo['trial_days_remaining'] == 1 ? 'day' : 'days' }} remaining. 
+                    Trial ends on {{ $trialInfo['trial_ends_at']->format('M j, Y') }}. 
+                    Your annual subscription will begin automatically after the trial.
+                  @else
+                    Your trial ends today. Your annual subscription will begin automatically.
+                  @endif
+                </p>
+              </div>
             </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
         </div>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
       </div>
     </div>
   </div>
@@ -72,7 +74,9 @@
           <div class="text-center">
             <h1 class="mb-1 text-white">Welcome {{ auth()->user()->name }},</h1>
             <p class="card-text m-auto w-75">
-              @if(isset($trialInfo) && $trialInfo['is_on_trial'])
+              @if(auth()->user()->isSuperAdmin())
+                Super Admin Dashboard - Manage all organizations and monitor system-wide statistics.
+              @elseif(isset($trialInfo) && $trialInfo['is_on_trial'])
                 You're currently on a <strong>free trial</strong>. Enjoy full access to all Tracklet features!
               @else
                 Welcome to your Tracklet dashboard. Manage your organization and track your activities.
@@ -84,447 +88,469 @@
     </div>
     <!-- Greetings Card ends -->
 
-    <!-- Subscribers Chart Card starts -->
-    <div class="col-lg-3 col-sm-6 col-12">
-      <div class="card">
-        <div class="card-header flex-column align-items-start pb-0">
-          <div class="avatar bg-light-primary p-50 m-0">
-            <div class="avatar-content">
-              <i data-feather="users" class="font-medium-5"></i>
+    @if(auth()->user()->isSuperAdmin() && isset($superAdminStats))
+      <!-- Total Organizations Card -->
+      <div class="col-lg-3 col-sm-6 col-12">
+        <div class="card">
+          <div class="card-header flex-column align-items-start pb-0">
+            <div class="avatar bg-light-primary p-50 m-0">
+              <div class="avatar-content">
+                <i data-feather="briefcase" class="font-medium-5"></i>
+              </div>
             </div>
+            <h2 class="font-weight-bolder mt-1">{{ number_format($superAdminStats['total_organizations']) }}</h2>
+            <p class="card-text">Total Organizations</p>
           </div>
-          <h2 class="font-weight-bolder mt-1">92.6k</h2>
-          <p class="card-text">Subscribers Gained</p>
+          <div class="card-body">
+            <small class="text-muted">All registered organizations</small>
+          </div>
         </div>
-        <div id="gained-chart"></div>
       </div>
-    </div>
-    <!-- Subscribers Chart Card ends -->
 
-    <!-- Orders Chart Card starts -->
-    <div class="col-lg-3 col-sm-6 col-12">
-      <div class="card">
-        <div class="card-header flex-column align-items-start pb-0">
-          <div class="avatar bg-light-warning p-50 m-0">
-            <div class="avatar-content">
-              <i data-feather="package" class="font-medium-5"></i>
+      <!-- Subscribed Organizations Card -->
+      <div class="col-lg-3 col-sm-6 col-12">
+        <div class="card">
+          <div class="card-header flex-column align-items-start pb-0">
+            <div class="avatar bg-light-success p-50 m-0">
+              <div class="avatar-content">
+                <i data-feather="check-circle" class="font-medium-5"></i>
+              </div>
+            </div>
+            <h2 class="font-weight-bolder mt-1">{{ number_format($superAdminStats['subscribed_organizations']) }}</h2>
+            <p class="card-text">Active Subscriptions</p>
+          </div>
+          <div class="card-body">
+            <small class="text-muted">{{ $superAdminStats['trial_organizations'] }} on trial</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Users Card -->
+      <div class="col-lg-3 col-sm-6 col-12">
+        <div class="card">
+          <div class="card-header flex-column align-items-start pb-0">
+            <div class="avatar bg-light-info p-50 m-0">
+              <div class="avatar-content">
+                <i data-feather="users" class="font-medium-5"></i>
+              </div>
+            </div>
+            <h2 class="font-weight-bolder mt-1">{{ number_format($superAdminStats['total_users']) }}</h2>
+            <p class="card-text">Total Users</p>
+          </div>
+          <div class="card-body">
+            <small class="text-muted">Across all organizations</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Invitations Card -->
+      <div class="col-lg-3 col-sm-6 col-12">
+        <div class="card">
+          <div class="card-header flex-column align-items-start pb-0">
+            <div class="avatar bg-light-warning p-50 m-0">
+              <div class="avatar-content">
+                <i data-feather="mail" class="font-medium-5"></i>
+              </div>
+            </div>
+            <h2 class="font-weight-bolder mt-1">{{ number_format($superAdminStats['pending_invitations']) }}</h2>
+            <p class="card-text">Pending Invitations</p>
+          </div>
+          <div class="card-body">
+            <small class="text-muted">{{ $superAdminStats['expired_invitations'] }} expired</small>
+          </div>
+        </div>
+      </div>
+    @else
+      <!-- Organization Dashboard Stats Cards -->
+      @if(isset($financialSnapshot))
+        <!-- Financial Snapshot Card -->
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="card">
+            <div class="card-header flex-column align-items-start pb-0">
+              <div class="avatar bg-light-primary p-50 m-0">
+                <div class="avatar-content">
+                  <i data-feather="dollar-sign" class="font-medium-5"></i>
+                </div>
+              </div>
+              <h2 class="font-weight-bolder mt-1">${{ number_format($financialSnapshot['current_month'], 2) }}</h2>
+              <p class="card-text">This Month Expenses</p>
+            </div>
+            <div class="card-body">
+              @if($financialSnapshot['change'] != 0)
+                <small class="{{ $financialSnapshot['change'] > 0 ? 'text-danger' : 'text-success' }}">
+                  {{ $financialSnapshot['change'] > 0 ? '+' : '' }}{{ number_format($financialSnapshot['change'], 1) }}% vs last month
+                </small>
+              @else
+                <small class="text-muted">No previous month data</small>
+              @endif
             </div>
           </div>
-          <h2 class="font-weight-bolder mt-1">38.4K</h2>
-          <p class="card-text">Orders Received</p>
         </div>
-        <div id="order-chart"></div>
-      </div>
-    </div>
-    <!-- Orders Chart Card ends -->
+      @endif
+
+      @if(isset($inventoryStatus))
+        <!-- Low Stock Card -->
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="card">
+            <div class="card-header flex-column align-items-start pb-0">
+              <div class="avatar bg-light-warning p-50 m-0">
+                <div class="avatar-content">
+                  <i data-feather="alert-triangle" class="font-medium-5"></i>
+                </div>
+              </div>
+              <h2 class="font-weight-bolder mt-1">{{ $inventoryStatus['low_stock_count'] }}</h2>
+              <p class="card-text">Low Stock Items</p>
+            </div>
+            <div class="card-body">
+              <small class="text-muted">Items below threshold</small>
+            </div>
+          </div>
+        </div>
+      @endif
+
+      @if(isset($assetSummary))
+        <!-- Assets Card -->
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="card">
+            <div class="card-header flex-column align-items-start pb-0">
+              <div class="avatar bg-light-info p-50 m-0">
+                <div class="avatar-content">
+                  <i data-feather="package" class="font-medium-5"></i>
+                </div>
+              </div>
+              <h2 class="font-weight-bolder mt-1">{{ $assetSummary['total'] }}</h2>
+              <p class="card-text">Total Assets</p>
+            </div>
+            <div class="card-body">
+              <small class="text-muted">{{ $assetSummary['active'] }} active, {{ $assetSummary['in_repair'] }} in repair</small>
+            </div>
+          </div>
+        </div>
+      @endif
+
+      @if(isset($upcomingMaintenance))
+        <!-- Upcoming Maintenance Card -->
+        <div class="col-lg-3 col-sm-6 col-12">
+          <div class="card">
+            <div class="card-header flex-column align-items-start pb-0">
+              <div class="avatar bg-light-danger p-50 m-0">
+                <div class="avatar-content">
+                  <i data-feather="tool" class="font-medium-5"></i>
+                </div>
+              </div>
+              <h2 class="font-weight-bolder mt-1">{{ $upcomingMaintenance->count() }}</h2>
+              <p class="card-text">Upcoming Maintenance</p>
+            </div>
+            <div class="card-body">
+              <small class="text-muted">Next 7 days</small>
+            </div>
+          </div>
+        </div>
+      @endif
+    @endif
   </div>
 
-  <div class="row match-height">
-    <!-- Avg Sessions Chart Card starts -->
-    <div class="col-lg-6 col-12">
-      <div class="card">
-        <div class="card-body">
-          <div class="row pb-50">
-            <div class="col-sm-6 col-12 d-flex justify-content-between flex-column order-sm-1 order-2 mt-1 mt-sm-0">
-              <div class="mb-1 mb-sm-0">
-                <h2 class="font-weight-bolder mb-25">2.7K</h2>
-                <p class="card-text font-weight-bold mb-2">Avg Sessions</p>
-                <div class="font-medium-2">
-                  <span class="text-success mr-25">+5.2%</span>
-                  <span>vs last 7 days</span>
-                </div>
-              </div>
-              <button type="button" class="btn btn-primary">View Details</button>
-            </div>
-            <div class="col-sm-6 col-12 d-flex justify-content-between flex-column text-right order-sm-2 order-1">
-              <div class="dropdown chart-dropdown">
-                <button
-                  class="btn btn-sm border-0 dropdown-toggle p-50"
-                  type="button"
-                  id="dropdownItem5"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="false"
-                >
-                  Last 7 Days
-                </button>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownItem5">
-                  <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-                  <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-                  <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
-                </div>
-              </div>
-              <div id="avg-sessions-chart"></div>
-            </div>
+  @if(auth()->user()->isSuperAdmin() && isset($superAdminStats))
+    <!-- Super Admin Statistics Section -->
+    <div class="row match-height">
+      <!-- Subscription Overview Card -->
+      <div class="col-lg-6 col-12">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Subscription Overview</h4>
           </div>
-          <hr />
-          <div class="row avg-sessions pt-50">
-            <div class="col-6 mb-2">
-              <p class="mb-50">Goal: $100000</p>
-              <div class="progress progress-bar-primary" style="height: 6px">
-                <div
-                  class="progress-bar"
-                  role="progressbar"
-                  aria-valuenow="50"
-                  aria-valuemin="50"
-                  aria-valuemax="100"
-                  style="width: 50%"
-                ></div>
-              </div>
-            </div>
-            <div class="col-6 mb-2">
-              <p class="mb-50">Users: 100K</p>
-              <div class="progress progress-bar-warning" style="height: 6px">
-                <div
-                  class="progress-bar"
-                  role="progressbar"
-                  aria-valuenow="60"
-                  aria-valuemin="60"
-                  aria-valuemax="100"
-                  style="width: 60%"
-                ></div>
-              </div>
-            </div>
-            <div class="col-6">
-              <p class="mb-50">Retention: 90%</p>
-              <div class="progress progress-bar-danger" style="height: 6px">
-                <div
-                  class="progress-bar"
-                  role="progressbar"
-                  aria-valuenow="70"
-                  aria-valuemin="70"
-                  aria-valuemax="100"
-                  style="width: 70%"
-                ></div>
-              </div>
-            </div>
-            <div class="col-6">
-              <p class="mb-50">Duration: 1yr</p>
-              <div class="progress progress-bar-success" style="height: 6px">
-                <div
-                  class="progress-bar"
-                  role="progressbar"
-                  aria-valuenow="90"
-                  aria-valuemin="90"
-                  aria-valuemax="100"
-                  style="width: 90%"
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Avg Sessions Chart Card ends -->
-
-    <!-- Support Tracker Chart Card starts -->
-    <div class="col-lg-6 col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between pb-0">
-          <h4 class="card-title">Support Tracker</h4>
-          <div class="dropdown chart-dropdown">
-            <button
-              class="btn btn-sm border-0 dropdown-toggle p-50"
-              type="button"
-              id="dropdownItem4"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              Last 7 Days
-            </button>
-            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownItem4">
-              <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-              <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-              <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-sm-2 col-12 d-flex flex-column flex-wrap text-center">
-              <h1 class="font-large-2 font-weight-bolder mt-2 mb-0">163</h1>
-              <p class="card-text">Tickets</p>
-            </div>
-            <div class="col-sm-10 col-12 d-flex justify-content-center">
-              <div id="support-trackers-chart"></div>
-            </div>
-          </div>
-          <div class="d-flex justify-content-between mt-1">
-            <div class="text-center">
-              <p class="card-text mb-50">New Tickets</p>
-              <span class="font-large-1 font-weight-bold">29</span>
-            </div>
-            <div class="text-center">
-              <p class="card-text mb-50">Open Tickets</p>
-              <span class="font-large-1 font-weight-bold">63</span>
-            </div>
-            <div class="text-center">
-              <p class="card-text mb-50">Response Time</p>
-              <span class="font-large-1 font-weight-bold">1d</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Support Tracker Chart Card ends -->
-  </div>
-
-  <div class="row match-height">
-    <!-- Timeline Card -->
-    <div class="col-lg-4 col-12">
-      <div class="card card-user-timeline">
-        <div class="card-header">
-          <div class="d-flex align-items-center">
-            <i data-feather="list" class="user-timeline-title-icon"></i>
-            <h4 class="card-title">User Timeline</h4>
-          </div>
-        </div>
-        <div class="card-body">
-          <ul class="timeline ml-50 mb-0">
-            <li class="timeline-item">
-              <span class="timeline-point timeline-point-indicator"></span>
-              <div class="timeline-event">
-                <h6>12 Invoices have been paid</h6>
-                <p>Invoices are paid to the company</p>
-                <div class="media align-items-center">
-                  <img class="mr-1" src="{{asset('images/icons/json.png')}}" alt="data.json" height="23" />
-                  <h6 class="media-body mb-0">data.json</h6>
-                </div>
-              </div>
-            </li>
-            <li class="timeline-item">
-              <span class="timeline-point timeline-point-warning timeline-point-indicator"></span>
-              <div class="timeline-event">
-                <h6>Client Meeting</h6>
-                <p>Project meeting with Carl</p>
-                <div class="media align-items-center">
-                  <div class="avatar mr-50">
-                    <img
-                      src="{{asset('images/portrait/small/avatar-s-9.jpg')}}"
-                      alt="Avatar"
-                      width="38"
-                      height="38"
-                    />
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-light-success mr-1">
+                    <div class="avatar-content">
+                      <i data-feather="check-circle" class="font-medium-3"></i>
+                    </div>
                   </div>
-                  <div class="media-body">
-                    <h6 class="mb-0">Carl Roy (Client)</h6>
-                    <p class="mb-0">CEO of Infibeam</p>
+                  <div>
+                    <h3 class="mb-0">{{ $superAdminStats['active_subscriptions'] }}</h3>
+                    <small class="text-muted">Active Subscriptions</small>
                   </div>
                 </div>
               </div>
-            </li>
-            <li class="timeline-item">
-              <span class="timeline-point timeline-point-info timeline-point-indicator"></span>
-              <div class="timeline-event">
-                <h6>Create a new project</h6>
-                <p>Add files to new design folder</p>
-                <div class="avatar-group">
-                  <div
-                    data-toggle="tooltip"
-                    data-popup="tooltip-custom"
-                    data-placement="bottom"
-                    data-original-title="Billy Hopkins"
-                    class="avatar pull-up"
-                  >
-                    <img
-                      src="{{asset('images/portrait/small/avatar-s-9.jpg')}}"
-                      alt="Avatar"
-                      width="33"
-                      height="33"
-                    />
+              <div class="col-6 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-light-info mr-1">
+                    <div class="avatar-content">
+                      <i data-feather="clock" class="font-medium-3"></i>
+                    </div>
                   </div>
-                  <div
-                    data-toggle="tooltip"
-                    data-popup="tooltip-custom"
-                    data-placement="bottom"
-                    data-original-title="Amy Carson"
-                    class="avatar pull-up"
-                  >
-                    <img
-                      src="{{asset('images/portrait/small/avatar-s-6.jpg')}}"
-                      alt="Avatar"
-                      width="33"
-                      height="33"
-                    />
-                  </div>
-                  <div
-                    data-toggle="tooltip"
-                    data-popup="tooltip-custom"
-                    data-placement="bottom"
-                    data-original-title="Brandon Miles"
-                    class="avatar pull-up"
-                  >
-                    <img
-                      src="{{asset('images/portrait/small/avatar-s-8.jpg')}}"
-                      alt="Avatar"
-                      width="33"
-                      height="33"
-                    />
-                  </div>
-                  <div
-                    data-toggle="tooltip"
-                    data-popup="tooltip-custom"
-                    data-placement="bottom"
-                    data-original-title="Daisy Weber"
-                    class="avatar pull-up"
-                  >
-                    <img
-                      src="{{asset('images/portrait/small/avatar-s-7.jpg')}}"
-                      alt="Avatar"
-                      width="33"
-                      height="33"
-                    />
-                  </div>
-                  <div
-                    data-toggle="tooltip"
-                    data-popup="tooltip-custom"
-                    data-placement="bottom"
-                    data-original-title="Jenny Looper"
-                    class="avatar pull-up"
-                  >
-                    <img
-                      src="{{asset('images/portrait/small/avatar-s-20.jpg')}}"
-                      alt="Avatar"
-                      width="33"
-                      height="33"
-                    />
+                  <div>
+                    <h3 class="mb-0">{{ $superAdminStats['trial_organizations'] }}</h3>
+                    <small class="text-muted">On Trial</small>
                   </div>
                 </div>
               </div>
-            </li>
-            <li class="timeline-item">
-              <span class="timeline-point timeline-point-danger timeline-point-indicator"></span>
-              <div class="timeline-event">
-                <h6>Update project for client</h6>
-                <p class="mb-0">Update files as per new design</p>
+              <div class="col-6">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-light-warning mr-1">
+                    <div class="avatar-content">
+                      <i data-feather="x-circle" class="font-medium-3"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 class="mb-0">{{ $superAdminStats['total_organizations'] - $superAdminStats['subscribed_organizations'] }}</h3>
+                    <small class="text-muted">Not Subscribed</small>
+                  </div>
+                </div>
               </div>
-            </li>
-          </ul>
+              <div class="col-6">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-light-primary mr-1">
+                    <div class="avatar-content">
+                      <i data-feather="percent" class="font-medium-3"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 class="mb-0">
+                      {{ $superAdminStats['total_organizations'] > 0 ? number_format(($superAdminStats['subscribed_organizations'] / $superAdminStats['total_organizations']) * 100, 1) : 0 }}%
+                    </h3>
+                    <small class="text-muted">Subscription Rate</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <!--/ Timeline Card -->
 
-    <!-- Sales Stats Chart Card starts -->
-    <div class="col-lg-4 col-md-6 col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-start pb-1">
-          <div>
-            <h4 class="card-title mb-25">Sales</h4>
-            <p class="card-text">Last 6 months</p>
+      <!-- Registration Source Card -->
+      <div class="col-lg-6 col-12">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Registration Sources</h4>
           </div>
-          <div class="dropdown chart-dropdown">
-            <i data-feather="more-vertical" class="font-medium-3 cursor-pointer" data-toggle="dropdown"></i>
-            <div class="dropdown-menu dropdown-menu-right">
-              <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-              <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-              <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-light-primary mr-1">
+                    <div class="avatar-content">
+                      <i data-feather="mail" class="font-medium-3"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 class="mb-0">{{ $superAdminStats['organizations_by_source']['invited'] }}</h3>
+                    <small class="text-muted">Invited</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 mb-2">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-light-success mr-1">
+                    <div class="avatar-content">
+                      <i data-feather="user-plus" class="font-medium-3"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 class="mb-0">{{ $superAdminStats['organizations_by_source']['self_registered'] }}</h3>
+                    <small class="text-muted">Self-Registered</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 mt-2">
+                <div class="progress" style="height: 8px;">
+                  @php
+                    $total = $superAdminStats['organizations_by_source']['invited'] + $superAdminStats['organizations_by_source']['self_registered'];
+                    $invitedPercent = $total > 0 ? ($superAdminStats['organizations_by_source']['invited'] / $total) * 100 : 0;
+                    $selfRegisteredPercent = $total > 0 ? ($superAdminStats['organizations_by_source']['self_registered'] / $total) * 100 : 0;
+                  @endphp
+                  <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $invitedPercent }}%"></div>
+                  <div class="progress-bar bg-success" role="progressbar" style="width: {{ $selfRegisteredPercent }}%"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="card-body">
-          <div class="d-inline-block mr-1">
-            <div class="d-flex align-items-center">
-              <i data-feather="circle" class="font-small-3 text-primary mr-50"></i>
-              <h6 class="mb-0">Sales</h6>
-            </div>
-          </div>
-          <div class="d-inline-block">
-            <div class="d-flex align-items-center">
-              <i data-feather="circle" class="font-small-3 text-info mr-50"></i>
-              <h6 class="mb-0">Visits</h6>
-            </div>
-          </div>
-          <div id="sales-visit-chart" class="mt-50"></div>
         </div>
       </div>
     </div>
-    <!-- Sales Stats Chart Card ends -->
 
-    <!-- App Design Card -->
-    <div class="col-lg-4 col-md-6 col-12">
-      <div class="card card-app-design">
-        <div class="card-body">
-          <div class="badge badge-light-primary">03 Sep, 20</div>
-          <h4 class="card-title mt-1 mb-75 pt-25">App design</h4>
-          <p class="card-text font-small-2 mb-2">
-            You can Find Only Post and Quotes Related to IOS like ipad app design, iphone app design
-          </p>
-          <div class="design-group mb-2 pt-50">
-            <h6 class="section-label">Team</h6>
-            <div class="badge badge-light-warning mr-1">Figma</div>
-            <div class="badge badge-light-primary">Wireframe</div>
+    <!-- Recent Organizations Table -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title">Recent Organizations</h4>
+            <a href="{{ route('superadmin.organizations.index') }}" class="btn btn-sm btn-primary">View All</a>
           </div>
-          <div class="design-group pt-25">
-            <h6 class="section-label">Members</h6>
-            <div class="avatar">
-              <img src="{{asset('images/portrait/small/avatar-s-9.jpg')}}" width="34" height="34" alt="Avatar" />
-            </div>
-            <div class="avatar bg-light-danger">
-              <div class="avatar-content">PI</div>
-            </div>
-            <div class="avatar">
-              <img
-                src="{{asset('images/portrait/small/avatar-s-14.jpg')}}"
-                width="34"
-                height="34"
-                alt="Avatar"
-              />
-            </div>
-            <div class="avatar">
-              <img src="{{asset('images/portrait/small/avatar-s-7.jpg')}}" width="34" height="34" alt="Avatar" />
-            </div>
-            <div class="avatar bg-light-secondary">
-              <div class="avatar-content">AL</div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Organization</th>
+                    <th>Email</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Users</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @forelse($superAdminStats['recent_organizations'] as $org)
+                    <tr>
+                      <td>
+                        <strong>{{ $org->name }}</strong>
+                      </td>
+                      <td>{{ $org->email }}</td>
+                      <td>
+                        <span class="badge badge-{{ $org->registration_source === 'invited' ? 'primary' : 'success' }}">
+                          {{ ucfirst(str_replace('_', ' ', $org->registration_source)) }}
+                        </span>
+                      </td>
+                      <td>
+                        @if($org->isSubscribed())
+                          <span class="badge badge-success">Subscribed</span>
+                        @elseif($org->isOnTrial())
+                          <span class="badge badge-info">Trial ({{ $org->trialDaysRemaining() }}d)</span>
+                        @else
+                          <span class="badge badge-warning">Not Subscribed</span>
+                        @endif
+                      </td>
+                      <td>{{ $org->users()->count() }}</td>
+                      <td>{{ $org->created_at->format('M d, Y') }}</td>
+                    </tr>
+                  @empty
+                    <tr>
+                      <td colspan="6" class="text-center">No organizations yet</td>
+                    </tr>
+                  @endforelse
+                </tbody>
+              </table>
             </div>
           </div>
-          <div class="design-planning-wrapper mb-2 py-75">
-            <div class="design-planning">
-              <p class="card-text mb-25">Due Date</p>
-              <h6 class="mb-0">12 Apr, 21</h6>
-            </div>
-            <div class="design-planning">
-              <p class="card-text mb-25">Budget</p>
-              <h6 class="mb-0">$49251.91</h6>
-            </div>
-            <div class="design-planning">
-              <p class="card-text mb-25">Cost</p>
-              <h6 class="mb-0">$840.99</h6>
-            </div>
-          </div>
-          <button type="button" class="btn btn-primary btn-block">Join Team</button>
         </div>
       </div>
     </div>
-    <!--/ App Design Card -->
-  </div>
+  @else
+    <!-- Organization Dashboard Content (existing content for non-super-admin users) -->
+    <div class="row match-height">
+      @if(isset($financialSnapshot) && isset($expenseCharts))
+        <!-- Financial Charts Card -->
+        <div class="col-lg-6 col-12">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title">Expense Overview</h4>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-12 mb-2">
+                  <h3 class="mb-0">${{ number_format($financialSnapshot['current_month'], 2) }}</h3>
+                  <small class="text-muted">Current Month Expenses</small>
+                  @if($financialSnapshot['change'] != 0)
+                    <div class="mt-1">
+                      <span class="badge badge-{{ $financialSnapshot['change'] > 0 ? 'danger' : 'success' }}">
+                        {{ $financialSnapshot['change'] > 0 ? '+' : '' }}{{ number_format($financialSnapshot['change'], 1) }}% vs last month
+                      </span>
+                    </div>
+                  @endif
+                </div>
+                @if(count($financialSnapshot['top_categories']) > 0)
+                  <div class="col-12 mt-2">
+                    <h6>Top Categories This Month:</h6>
+                    <ul class="list-unstyled">
+                      @foreach($financialSnapshot['top_categories']->take(5) as $cat)
+                        <li class="mb-1">
+                          <span class="font-weight-bold">{{ $cat['category'] }}:</span>
+                          ${{ number_format($cat['amount'], 2) }}
+                        </li>
+                      @endforeach
+                    </ul>
+                  </div>
+                @endif
+              </div>
+            </div>
+          </div>
+        </div>
+      @endif
 
-  <!-- List DataTable -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card invoice-list-wrapper">
-        <div class="card-datatable table-responsive">
-          <table class="invoice-list-table table">
-            <thead>
-              <tr>
-                <th></th>
-                <th>#</th>
-                <th><i data-feather="trending-up"></i></th>
-                <th>Client</th>
-                <th>Total</th>
-                <th class="text-truncate">Issued Date</th>
-                <th>Balance</th>
-                <th>Invoice Status</th>
-                <th class="cell-fit">Actions</th>
-              </tr>
-            </thead>
-          </table>
+      @if(isset($inventoryStatus) && $inventoryStatus['low_stock_count'] > 0)
+        <!-- Low Stock Items Card -->
+        <div class="col-lg-6 col-12">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title">Low Stock Alerts</h4>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Current Stock</th>
+                      <th>Threshold</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($inventoryStatus['low_stock_items']->take(5) as $item)
+                      <tr>
+                        <td>{{ $item->name }}</td>
+                        <td><span class="badge badge-danger">{{ $item->quantity }}</span></td>
+                        <td>{{ $item->minimum_threshold }}</td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
+              @if($inventoryStatus['low_stock_count'] > 5)
+                <a href="{{ route('inventory.low-stock') }}" class="btn btn-sm btn-warning btn-block mt-1">
+                  View All {{ $inventoryStatus['low_stock_count'] }} Low Stock Items
+                </a>
+              @endif
+            </div>
+          </div>
+        </div>
+      @endif
+    </div>
+
+    @if(isset($upcomingMaintenance) && $upcomingMaintenance->count() > 0)
+      <!-- Upcoming Maintenance Card -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h4 class="card-title">Upcoming Maintenance (Next 7 Days)</h4>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Asset</th>
+                      <th>Type</th>
+                      <th>Scheduled Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($upcomingMaintenance as $maintenance)
+                      <tr>
+                        <td>{{ $maintenance->asset->name }}</td>
+                        <td>{{ $maintenance->type }}</td>
+                        <td>{{ $maintenance->scheduled_date->format('M d, Y') }}</td>
+                        <td>
+                          <span class="badge badge-{{ $maintenance->status === 'pending' ? 'warning' : 'info' }}">
+                            {{ ucfirst($maintenance->status) }}
+                          </span>
+                        </td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  <!--/ List DataTable -->
+    @endif
+  @endif
+
 </section>
 <!-- Dashboard Analytics end -->
 @endsection

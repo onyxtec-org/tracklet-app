@@ -19,8 +19,8 @@ trait ApiResponse
      */
     protected function respond($data = null, ?string $view = null, array $viewData = [], int $status = 200)
     {
-        // Check if request expects JSON (API request)
-        if (request()->expectsJson() || request()->is('api/*')) {
+        // Check if request expects JSON (API request) or is AJAX
+        if (request()->expectsJson() || request()->is('api/*') || request()->ajax()) {
             return response()->json([
                 'success' => true,
                 'data' => $data,
@@ -53,7 +53,7 @@ trait ApiResponse
      */
     protected function respondError(string $message, int $status = 400, array $errors = [])
     {
-        if (request()->expectsJson() || request()->is('api/*')) {
+        if (request()->expectsJson() || request()->is('api/*') || request()->ajax()) {
             return response()->json([
                 'success' => false,
                 'message' => $message,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Organization;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,17 @@ class ExpenseController extends Controller
     use ApiResponse;
 
     /**
-     * Display a listing of expenses.
+     * @OA\Get(
+     *     path="/api/expenses",
+     *     summary="List expenses",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="category_id", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="date_from", in="query", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="date_to", in="query", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="vendor", in="query", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="List of expenses")
+     * )
      */
     public function index(Request $request)
     {
@@ -90,7 +101,26 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Store a newly created expense.
+     * @OA\Post(
+     *     path="/api/expenses",
+     *     summary="Create expense",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"expense_date", "amount"},
+     *             @OA\Property(property="expense_category_id", type="integer", example=1),
+     *             @OA\Property(property="category_name", type="string", example="New Category"),
+     *             @OA\Property(property="expense_date", type="string", format="date", example="2025-11-28"),
+     *             @OA\Property(property="amount", type="number", format="float", example="150.00"),
+     *             @OA\Property(property="vendor_payee", type="string", example="Office Depot"),
+     *             @OA\Property(property="description", type="string", example="Office supplies")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Expense created successfully"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
      */
     public function store(Request $request)
     {
@@ -100,19 +130,40 @@ class ExpenseController extends Controller
             return $this->respondError('User does not belong to an organization.', 403);
         }
 
+        // Handle category_type from form (web interface)
+        $categoryType = $request->input('category_type', 'existing');
+        if ($categoryType === 'new') {
+            // If creating new category, clear category_id
+            $request->merge(['expense_category_id' => null]);
+        } else {
+            // If selecting existing, clear category_name
+            $request->merge(['category_name' => null]);
+        }
+
         $validated = $request->validate([
-            'expense_category_id' => 'required|exists:expense_categories,id',
+            'expense_category_id' => 'nullable|exists:expense_categories,id',
+            'category_name' => 'nullable|string|max:255',
             'expense_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'vendor_payee' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
+        ], [
+            'expense_category_id.required_without' => 'Please select a category or create a new one.',
+            'category_name.required_without' => 'Please enter a category name or select an existing category.',
         ]);
 
-        // Verify category belongs to organization
-        $category = ExpenseCategory::where('id', $validated['expense_category_id'])
-            ->where('organization_id', $organization->id)
-            ->firstOrFail();
+        // Validate that at least one category identifier is provided
+        if (empty($validated['expense_category_id']) && empty($validated['category_name'])) {
+            return $this->respondError('Either expense_category_id or category_name is required.', 422);
+        }
+
+        // If both are provided, prioritize category_id (existing category takes precedence)
+        $categoryId = !empty($validated['expense_category_id']) ? $validated['expense_category_id'] : null;
+        $categoryName = !empty($validated['category_name']) ? $validated['category_name'] : null;
+
+        // Get or create category
+        $category = $this->getOrCreateCategory($organization, $categoryId, $categoryName);
 
         $receiptPath = null;
         if ($request->hasFile('receipt')) {
@@ -124,7 +175,7 @@ class ExpenseController extends Controller
 
         $expense = Expense::create([
             'organization_id' => $organization->id,
-            'expense_category_id' => $validated['expense_category_id'],
+            'expense_category_id' => $category->id,
             'user_id' => auth()->id(),
             'expense_date' => $validated['expense_date'],
             'amount' => $validated['amount'],
@@ -140,7 +191,15 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Display the specified expense.
+     * @OA\Get(
+     *     path="/api/expenses/{id}",
+     *     summary="Get expense",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Expense details"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
      */
     public function show(Expense $expense)
     {
@@ -188,7 +247,27 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Update the specified expense.
+     * @OA\Put(
+     *     path="/api/expenses/{id}",
+     *     summary="Update expense",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"expense_date", "amount"},
+     *             @OA\Property(property="expense_category_id", type="integer"),
+     *             @OA\Property(property="category_name", type="string"),
+     *             @OA\Property(property="expense_date", type="string", format="date"),
+     *             @OA\Property(property="amount", type="number", format="float"),
+     *             @OA\Property(property="vendor_payee", type="string"),
+     *             @OA\Property(property="description", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Expense updated successfully"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
      */
     public function update(Request $request, Expense $expense)
     {
@@ -198,19 +277,40 @@ class ExpenseController extends Controller
             return $this->respondError('Unauthorized access.', 403);
         }
 
+        // Handle category_type from form (web interface)
+        $categoryType = $request->input('category_type', 'existing');
+        if ($categoryType === 'new') {
+            // If creating new category, clear category_id
+            $request->merge(['expense_category_id' => null]);
+        } else {
+            // If selecting existing, clear category_name
+            $request->merge(['category_name' => null]);
+        }
+
         $validated = $request->validate([
-            'expense_category_id' => 'required|exists:expense_categories,id',
+            'expense_category_id' => 'nullable|exists:expense_categories,id',
+            'category_name' => 'nullable|string|max:255',
             'expense_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'vendor_payee' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ], [
+            'expense_category_id.required_without' => 'Please select a category or create a new one.',
+            'category_name.required_without' => 'Please enter a category name or select an existing category.',
         ]);
 
-        // Verify category belongs to organization
-        $category = ExpenseCategory::where('id', $validated['expense_category_id'])
-            ->where('organization_id', $organization->id)
-            ->firstOrFail();
+        // Validate that at least one category identifier is provided
+        if (empty($validated['expense_category_id']) && empty($validated['category_name'])) {
+            return $this->respondError('Either expense_category_id or category_name is required.', 422);
+        }
+
+        // If both are provided, prioritize category_id (existing category takes precedence)
+        $categoryId = !empty($validated['expense_category_id']) ? $validated['expense_category_id'] : null;
+        $categoryName = !empty($validated['category_name']) ? $validated['category_name'] : null;
+
+        // Get or create category
+        $category = $this->getOrCreateCategory($organization, $categoryId, $categoryName);
 
         // Handle receipt upload
         if ($request->hasFile('receipt')) {
@@ -226,7 +326,14 @@ class ExpenseController extends Controller
             $validated['receipt_path'] = $receiptPath;
         }
 
-        $expense->update($validated);
+        $expense->update([
+            'expense_category_id' => $category->id,
+            'expense_date' => $validated['expense_date'],
+            'amount' => $validated['amount'],
+            'vendor_payee' => $validated['vendor_payee'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'receipt_path' => $validated['receipt_path'] ?? $expense->receipt_path,
+        ]);
 
         return $this->respond([
             'message' => 'Expense updated successfully.',
@@ -235,7 +342,15 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Remove the specified expense.
+     * @OA\Delete(
+     *     path="/api/expenses/{id}",
+     *     summary="Delete expense",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Expense deleted successfully"),
+     *     @OA\Response(response=403, description="Unauthorized")
+     * )
      */
     public function destroy(Expense $expense)
     {
@@ -258,7 +373,17 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Get expense reports (monthly, quarterly, YTD)
+     * @OA\Get(
+     *     path="/api/expenses/reports",
+     *     summary="Get expense reports",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="period", in="query", @OA\Schema(type="string", enum={"monthly", "quarterly", "ytd"})),
+     *     @OA\Parameter(name="year", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="month", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="quarter", in="query", @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Expense reports")
+     * )
      */
     public function reports(Request $request)
     {
@@ -331,7 +456,15 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Get expense charts data
+     * @OA\Get(
+     *     path="/api/expenses/charts",
+     *     summary="Get expense charts data",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="period", in="query", @OA\Schema(type="string", enum={"monthly", "quarterly", "ytd"})),
+     *     @OA\Parameter(name="year", in="query", @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Chart data (bar, line, pie)")
+     * )
      */
     public function charts(Request $request)
     {
@@ -414,7 +547,14 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Export expenses to Excel/PDF
+     * @OA\Get(
+     *     path="/api/expenses/export",
+     *     summary="Export expenses",
+     *     tags={"Expenses"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="format", in="query", @OA\Schema(type="string", enum={"excel", "pdf"})),
+     *     @OA\Response(response=200, description="Export data")
+     * )
      */
     public function export(Request $request)
     {
@@ -450,5 +590,68 @@ class ExpenseController extends Controller
             'expenses' => $expenses,
             'format' => $format,
         ]);
+    }
+
+    /**
+     * Get or create expense category
+     * 
+     * @param Organization $organization
+     * @param int|null $categoryId
+     * @param string|null $categoryName
+     * @return ExpenseCategory
+     */
+    private function getOrCreateCategory(Organization $organization, ?int $categoryId = null, ?string $categoryName = null): ExpenseCategory
+    {
+        // If category ID is provided, verify it belongs to organization
+        if ($categoryId) {
+            $category = ExpenseCategory::where('id', $categoryId)
+                ->where('organization_id', $organization->id)
+                ->first();
+            
+            if ($category) {
+                return $category;
+            }
+            
+            // Category ID provided but doesn't belong to organization
+            throw new \Illuminate\Validation\ValidationException(
+                validator([], []),
+                ['expense_category_id' => ['The selected expense category does not belong to your organization.']]
+            );
+        }
+
+        // If category name is provided, find or create it
+        if ($categoryName) {
+            $categoryName = trim($categoryName);
+            
+            if (empty($categoryName)) {
+                throw new \Illuminate\Validation\ValidationException(
+                    validator([], []),
+                    ['category_name' => ['Category name cannot be empty.']]
+                );
+            }
+
+            // Try to find existing category by name (case-insensitive)
+            $category = ExpenseCategory::where('organization_id', $organization->id)
+                ->whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
+                ->first();
+
+            if ($category) {
+                return $category;
+            }
+
+            // Create new category
+            return ExpenseCategory::create([
+                'organization_id' => $organization->id,
+                'name' => $categoryName,
+                'description' => null,
+                'is_system' => false,
+            ]);
+        }
+
+        // Neither category ID nor name provided
+        throw new \Illuminate\Validation\ValidationException(
+            validator([], []),
+            ['expense_category_id' => ['Either expense_category_id or category_name is required.']]
+        );
     }
 }

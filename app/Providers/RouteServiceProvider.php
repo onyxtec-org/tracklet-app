@@ -36,6 +36,15 @@ class RouteServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->configureRateLimiting();
+        
+        // Custom route model binding for inventory items
+        Route::bind('inventoryItem', function ($value) {
+            return \App\Models\InventoryItem::findOrFail($value);
+        });
+        
+        Route::bind('item', function ($value) {
+            return \App\Models\InventoryItem::findOrFail($value);
+        });
 
         $this->routes(function () {
             Route::prefix('api')

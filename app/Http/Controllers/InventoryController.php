@@ -14,11 +14,27 @@ class InventoryController extends Controller
     use ApiResponse;
 
     /**
-     * Display a listing of inventory items.
+     * @OA\Get(
+     *     path="/api/inventory/items",
+     *     summary="List inventory items",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="category", in="query", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="low_stock", in="query", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="search", in="query", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="List of inventory items"),
+     *     @OA\Response(response=403, description="Super Admin cannot access inventory management")
+     * )
      */
     public function index(Request $request)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        // Super Admin should not access inventory (organization-specific feature)
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
         
         if (!$organization) {
             return $this->respondError('User does not belong to an organization.', 403);
@@ -91,11 +107,36 @@ class InventoryController extends Controller
     }
 
     /**
-     * Store a newly created inventory item.
+     * @OA\Post(
+     *     path="/api/inventory/items",
+     *     summary="Create inventory item",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "quantity", "minimum_threshold", "unit_price"},
+     *             @OA\Property(property="name", type="string", example="A4 Paper"),
+     *             @OA\Property(property="category", type="string", example="Office Supplies"),
+     *             @OA\Property(property="quantity", type="integer", example=100, description="Initial stock quantity"),
+     *             @OA\Property(property="minimum_threshold", type="integer", example=20),
+     *             @OA\Property(property="unit_price", type="number", format="float", example="5.00"),
+     *             @OA\Property(property="unit", type="string", example="reams")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Item created successfully"),
+     *     @OA\Response(response=403, description="Super Admin cannot access inventory management")
+     * )
      */
     public function store(Request $request)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        // Super Admin should not access inventory
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
         
         if (!$organization) {
             return $this->respondError('User does not belong to an organization.', 403);
@@ -122,14 +163,38 @@ class InventoryController extends Controller
     }
 
     /**
-     * Display the specified inventory item.
+     * @OA\Get(
+     *     path="/api/inventory/items/{id}",
+     *     summary="Get inventory item",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Item details"),
+     *     @OA\Response(response=403, description="Super Admin cannot access inventory management")
+     * )
      */
     public function show(InventoryItem $inventoryItem)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
         
-        if (!$organization || $inventoryItem->organization_id !== $organization->id) {
-            return $this->respondError('Unauthorized access.', 403);
+        // Super Admin should not access inventory
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
+        
+        // Ensure organization is loaded
+        $user->load('organization');
+        $organization = $user->organization;
+        
+        if (!$organization) {
+            return $this->respondError('User does not belong to an organization.', 403);
+        }
+        
+        // Reload the item to ensure we have the latest data
+        $inventoryItem->refresh();
+        
+        if ($inventoryItem->organization_id !== $organization->id) {
+            return $this->respondError('Unauthorized access. This item belongs to a different organization.', 403);
         }
 
         $inventoryItem->load(['stockTransactions.user']);
@@ -146,10 +211,26 @@ class InventoryController extends Controller
      */
     public function edit(InventoryItem $inventoryItem)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
         
-        if (!$organization || $inventoryItem->organization_id !== $organization->id) {
-            return $this->respondError('Unauthorized access.', 403);
+        // Super Admin should not access inventory
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
+        
+        // Ensure organization is loaded
+        $user->load('organization');
+        $organization = $user->organization;
+        
+        if (!$organization) {
+            return $this->respondError('User does not belong to an organization.', 403);
+        }
+        
+        // Reload the item to ensure we have the latest data
+        $inventoryItem->refresh();
+        
+        if ($inventoryItem->organization_id !== $organization->id) {
+            return $this->respondError('Unauthorized access. This item belongs to a different organization.', 403);
         }
 
         return $this->respond(
@@ -160,11 +241,37 @@ class InventoryController extends Controller
     }
 
     /**
-     * Update the specified inventory item.
+     * @OA\Put(
+     *     path="/api/inventory/items/{id}",
+     *     summary="Update inventory item",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "quantity", "minimum_threshold", "unit_price"},
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="category", type="string"),
+     *             @OA\Property(property="quantity", type="integer"),
+     *             @OA\Property(property="minimum_threshold", type="integer"),
+     *             @OA\Property(property="unit_price", type="number", format="float"),
+     *             @OA\Property(property="unit", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Item updated successfully"),
+     *     @OA\Response(response=403, description="Super Admin cannot access inventory management")
+     * )
      */
     public function update(Request $request, InventoryItem $inventoryItem)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        // Super Admin should not access inventory
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
         
         if (!$organization || $inventoryItem->organization_id !== $organization->id) {
             return $this->respondError('Unauthorized access.', 403);
@@ -190,11 +297,25 @@ class InventoryController extends Controller
     }
 
     /**
-     * Remove the specified inventory item.
+     * @OA\Delete(
+     *     path="/api/inventory/items/{id}",
+     *     summary="Delete inventory item",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Item deleted successfully"),
+     *     @OA\Response(response=403, description="Super Admin cannot access inventory management")
+     * )
      */
     public function destroy(InventoryItem $inventoryItem)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        // Super Admin should not access inventory
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
         
         if (!$organization || $inventoryItem->organization_id !== $organization->id) {
             return $this->respondError('Unauthorized access.', 403);
@@ -208,11 +329,39 @@ class InventoryController extends Controller
     }
 
     /**
-     * Log stock transaction (in or out)
+     * @OA\Post(
+     *     path="/api/inventory/items/{id}/stock",
+     *     summary="Log stock transaction (Stock In/Out)",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"type", "quantity", "transaction_date"},
+     *             @OA\Property(property="type", type="string", enum={"in", "out"}, example="in", description="'in' = Stock In (add inventory), 'out' = Stock Out (remove inventory). Automatically updates item quantity."),
+     *             @OA\Property(property="quantity", type="integer", example=50, minimum=1),
+     *             @OA\Property(property="transaction_date", type="string", format="date", example="2025-11-28"),
+     *             @OA\Property(property="reference", type="string", example="PO-12345", description="Purchase order, usage reason, etc."),
+     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="unit_price", type="number", format="float", description="For stock in only - updates item unit price if provided"),
+     *             @OA\Property(property="vendor", type="string", description="For stock in only - supplier name")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Transaction logged successfully. Item quantity updated automatically."),
+     *     @OA\Response(response=400, description="Insufficient stock (for stock out)"),
+     *     @OA\Response(response=403, description="Super Admin cannot access inventory management")
+     * )
      */
     public function logStock(Request $request, InventoryItem $inventoryItem)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        // Super Admin should not access inventory
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
         
         if (!$organization || $inventoryItem->organization_id !== $organization->id) {
             return $this->respondError('Unauthorized access.', 403);
@@ -276,11 +425,27 @@ class InventoryController extends Controller
     }
 
     /**
-     * Get stock transactions for an item
+     * @OA\Get(
+     *     path="/api/inventory/items/{id}/transactions",
+     *     summary="Get stock transactions",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"in", "out"})),
+     *     @OA\Parameter(name="date_from", in="query", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="date_to", in="query", @OA\Schema(type="string", format="date")),
+     *     @OA\Response(response=200, description="Stock transactions")
+     * )
      */
     public function stockTransactions(InventoryItem $inventoryItem, Request $request)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
+        
+        // Super Admin should not access inventory
+        if ($user->isSuperAdmin()) {
+            return $this->respondError('Super Admin cannot access inventory management. Please use an organization account.', 403);
+        }
         
         if (!$organization || $inventoryItem->organization_id !== $organization->id) {
             return $this->respondError('Unauthorized access.', 403);
@@ -316,7 +481,13 @@ class InventoryController extends Controller
     }
 
     /**
-     * Get low stock items
+     * @OA\Get(
+     *     path="/api/inventory/low-stock",
+     *     summary="Get low stock items",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="Low stock items")
+     * )
      */
     public function lowStock()
     {
@@ -339,7 +510,16 @@ class InventoryController extends Controller
     }
 
     /**
-     * Get purchase history (stock in transactions)
+     * @OA\Get(
+     *     path="/api/inventory/purchase-history",
+     *     summary="Get purchase history",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="item_id", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="date_from", in="query", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="date_to", in="query", @OA\Schema(type="string", format="date")),
+     *     @OA\Response(response=200, description="Purchase history")
+     * )
      */
     public function purchaseHistory(Request $request)
     {
@@ -375,7 +555,13 @@ class InventoryController extends Controller
     }
 
     /**
-     * Get item aging report
+     * @OA\Get(
+     *     path="/api/inventory/aging-report",
+     *     summary="Get item aging report",
+     *     tags={"Inventory"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Response(response=200, description="Aging report")
+     * )
      */
     public function agingReport()
     {

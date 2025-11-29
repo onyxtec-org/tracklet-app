@@ -91,6 +91,12 @@
                                         <a href="{{ route('inventory.items.show', $item) }}" class="btn btn-sm btn-icon" title="View">
                                             <i data-feather="eye"></i>
                                         </a>
+                                        <button type="button" class="btn btn-sm btn-icon text-success" title="Stock In" data-toggle="modal" data-target="#stockModal" onclick="openStockModal({{ $item->id }}, 'in', '{{ $item->name }}')">
+                                            <i data-feather="arrow-down"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-icon text-danger" title="Stock Out" data-toggle="modal" data-target="#stockModal" onclick="openStockModal({{ $item->id }}, 'out', '{{ $item->name }}')">
+                                            <i data-feather="arrow-up"></i>
+                                        </button>
                                         <a href="{{ route('inventory.items.edit', $item) }}" class="btn btn-sm btn-icon" title="Edit">
                                             <i data-feather="edit"></i>
                                         </a>
@@ -120,6 +126,68 @@
         </div>
     </div>
 </div>
+
+<!-- Stock Transaction Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="stockTransactionForm" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Log Stock Transaction</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="type" id="stockTransactionType" value="in" required>
+                    <div class="form-group">
+                        <label>Item</label>
+                        <div class="alert alert-light-primary mb-2">
+                            <strong id="stockModalItemName">-</strong>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Type</label>
+                        <div id="transactionTypeDisplay" class="alert alert-info mb-2">
+                            <i data-feather="arrow-down" class="mr-1"></i> <strong>Stock In</strong> - Adding inventory
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity <span class="text-danger">*</span></label>
+                        <input type="number" name="quantity" min="1" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Date <span class="text-danger">*</span></label>
+                        <input type="date" name="transaction_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Reference</label>
+                        <input type="text" name="reference" class="form-control" placeholder="Purchase order, usage reason, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div id="stockInFields">
+                        <div class="form-group">
+                            <label>Unit Price</label>
+                            <input type="number" name="unit_price" step="0.01" min="0" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Vendor</label>
+                            <input type="text" name="vendor" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('page-script')
@@ -128,6 +196,42 @@ $(function() {
     if (feather) {
         feather.replace({ width: 14, height: 14 });
     }
+
+    function openStockModal(itemId, type, itemName) {
+        const form = $('#stockTransactionForm');
+        form.attr('action', '/inventory/items/' + itemId + '/stock');
+        $('#stockTransactionType').val(type);
+        $('#stockModalItemName').text(itemName);
+        updateTransactionTypeDisplay(type);
+    }
+
+    function updateTransactionTypeDisplay(type) {
+        const displayDiv = $('#transactionTypeDisplay');
+        if (type == 'in') {
+            displayDiv.removeClass('alert-danger').addClass('alert-success');
+            displayDiv.html('<i data-feather="arrow-down" class="mr-1"></i> <strong>Stock In</strong> - Adding inventory to stock');
+            $('#stockInFields').show();
+            $('.modal-title').html('<i data-feather="arrow-down" class="mr-1 text-success"></i> Log Stock In');
+        } else {
+            displayDiv.removeClass('alert-success').addClass('alert-danger');
+            displayDiv.html('<i data-feather="arrow-up" class="mr-1"></i> <strong>Stock Out</strong> - Removing inventory from stock');
+            $('#stockInFields').hide();
+            $('.modal-title').html('<i data-feather="arrow-up" class="mr-1 text-danger"></i> Log Stock Out');
+        }
+        if (feather) {
+            feather.replace();
+        }
+    }
+
+    // Make functions global
+    window.openStockModal = openStockModal;
+    window.updateTransactionTypeDisplay = updateTransactionTypeDisplay;
+
+    // Set default when modal opens
+    $('#stockModal').on('show.bs.modal', function(e) {
+        const type = $('#stockTransactionType').val() || 'in';
+        updateTransactionTypeDisplay(type);
+    });
 });
 </script>
 @endsection

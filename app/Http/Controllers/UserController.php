@@ -16,7 +16,15 @@ class UserController extends Controller
     use ApiResponse;
 
     /**
-     * Display a listing of users (organization-scoped).
+     * @OA\Get(
+     *     path="/api/users",
+     *     summary="List users",
+     *     tags={"Users"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="search", in="query", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="role", in="query", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="List of users")
+     * )
      */
     public function index(Request $request)
     {
@@ -99,7 +107,23 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created user.
+     * @OA\Post(
+     *     path="/api/users",
+     *     summary="Create user",
+     *     tags={"Users"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "email", "role"},
+     *             @OA\Property(property="name", type="string", example="Jane Doe"),
+     *             @OA\Property(property="email", type="string", format="email", example="jane@acme.com"),
+     *             @OA\Property(property="role", type="string", example="finance", enum={"admin", "finance", "admin_support", "general_staff"})
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="User created successfully"),
+     *     @OA\Response(response=403, description="Forbidden")
+     * )
      */
     public function store(Request $request)
     {

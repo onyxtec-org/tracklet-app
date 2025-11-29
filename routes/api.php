@@ -12,6 +12,7 @@ use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\RoleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -86,6 +87,9 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         Route::post('organizations/{organization}/resend-invitation', [OrganizationController::class, 'resendInvitation'])
             ->name('organizations.resend-invitation');
     });
+    
+    // Roles API (Available to all authenticated users)
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
     
     // Organization API routes (require subscription)
     Route::middleware(['subscribed', 'organization'])->group(function () {

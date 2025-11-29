@@ -15,7 +15,17 @@ class AssetController extends Controller
     use ApiResponse;
 
     /**
-     * Display a listing of assets.
+     * @OA\Get(
+     *     path="/api/assets",
+     *     summary="List assets",
+     *     tags={"Assets"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="status", in="query", @OA\Schema(type="string", enum={"active", "in_repair", "retired"})),
+     *     @OA\Parameter(name="category", in="query", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="assigned_to_user_id", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="search", in="query", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="List of assets")
+     * )
      */
     public function index(Request $request)
     {
@@ -109,7 +119,29 @@ class AssetController extends Controller
     }
 
     /**
-     * Store a newly created asset.
+     * @OA\Post(
+     *     path="/api/assets",
+     *     summary="Create asset",
+     *     tags={"Assets"},
+     *     security={{"sanctum": {}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "category", "purchase_date", "purchase_price"},
+     *             @OA\Property(property="name", type="string", example="Dell Laptop"),
+     *             @OA\Property(property="category", type="string", example="Electronics"),
+     *             @OA\Property(property="purchase_date", type="string", format="date", example="2025-01-15"),
+     *             @OA\Property(property="purchase_price", type="number", format="float", example="1200.00"),
+     *             @OA\Property(property="vendor", type="string", example="Dell Inc"),
+     *             @OA\Property(property="warranty_expiry", type="string", format="date"),
+     *             @OA\Property(property="assigned_to_user_id", type="integer"),
+     *             @OA\Property(property="assigned_to_location", type="string", example="Room 101"),
+     *             @OA\Property(property="serial_number", type="string"),
+     *             @OA\Property(property="model_number", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Asset created successfully")
+     * )
      */
     public function store(Request $request)
     {
@@ -193,7 +225,14 @@ class AssetController extends Controller
     }
 
     /**
-     * Display the specified asset.
+     * @OA\Get(
+     *     path="/api/assets/{id}",
+     *     summary="Get asset",
+     *     tags={"Assets"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Asset details")
+     * )
      */
     public function show(Asset $asset)
     {
@@ -240,7 +279,28 @@ class AssetController extends Controller
     }
 
     /**
-     * Update the specified asset.
+     * @OA\Put(
+     *     path="/api/assets/{id}",
+     *     summary="Update asset",
+     *     tags={"Assets"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "category", "purchase_date", "purchase_price", "status"},
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="category", type="string"),
+     *             @OA\Property(property="purchase_date", type="string", format="date"),
+     *             @OA\Property(property="purchase_price", type="number", format="float"),
+     *             @OA\Property(property="status", type="string", enum={"active", "in_repair", "retired"}),
+     *             @OA\Property(property="status_change_reason", type="string"),
+     *             @OA\Property(property="assigned_to_user_id", type="integer"),
+     *             @OA\Property(property="assigned_to_location", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Asset updated successfully")
+     * )
      */
     public function update(Request $request, Asset $asset)
     {
@@ -317,7 +377,14 @@ class AssetController extends Controller
     }
 
     /**
-     * Remove the specified asset.
+     * @OA\Delete(
+     *     path="/api/assets/{id}",
+     *     summary="Delete asset",
+     *     tags={"Assets"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Asset deleted successfully")
+     * )
      */
     public function destroy(Asset $asset)
     {
@@ -336,7 +403,28 @@ class AssetController extends Controller
 
 
     /**
-     * Log asset movement
+     * @OA\Post(
+     *     path="/api/assets/{id}/movement",
+     *     summary="Log asset movement",
+     *     tags={"Assets"},
+     *     security={{"sanctum": {}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"movement_date", "movement_type"},
+     *             @OA\Property(property="movement_date", type="string", format="date", example="2025-11-28"),
+     *             @OA\Property(property="movement_type", type="string", enum={"assignment", "location_change", "return", "other"}, example="assignment"),
+     *             @OA\Property(property="from_user_id", type="integer"),
+     *             @OA\Property(property="from_location", type="string"),
+     *             @OA\Property(property="to_user_id", type="integer"),
+     *             @OA\Property(property="to_location", type="string", example="Room 102"),
+     *             @OA\Property(property="reason", type="string", example="Department transfer"),
+     *             @OA\Property(property="notes", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Movement logged successfully")
+     * )
      */
     public function logMovement(Request $request, Asset $asset)
     {

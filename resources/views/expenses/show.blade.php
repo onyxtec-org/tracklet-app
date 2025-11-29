@@ -53,7 +53,7 @@
                                 <th>Receipt:</th>
                                 <td>
                                     @if($expense->receipt_path)
-                                        <a href="{{ Storage::url($expense->receipt_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ asset('storage/' . $expense->receipt_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                             <i data-feather="file" class="mr-1"></i> View Receipt
                                         </a>
                                     @else
