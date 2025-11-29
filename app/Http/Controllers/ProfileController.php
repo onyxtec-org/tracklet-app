@@ -22,6 +22,26 @@ class ProfileController extends Controller
         );
     }
 
+    public function update(Request $request)
+    {
+        $user = auth()->user();
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $user->name = $validated['name'];
+
+        if ($user->save()) {
+            return $this->respond([
+                'message' => 'Profile updated successfully',
+                'user' => $user->fresh()
+            ]);
+        } else {
+            return $this->respondError('Error while updating profile', 500);
+        }
+    }
+
     public function updatePasswordProfile(Request $request)
     {
         $user = auth()->user();

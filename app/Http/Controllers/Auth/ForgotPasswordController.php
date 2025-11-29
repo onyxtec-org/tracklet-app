@@ -20,6 +20,23 @@ class ForgotPasswordController extends Controller
 
     use SendsPasswordResetEmails;
 
+    /**
+     * Get the response for a successful password reset link.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $response
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    protected function sendResetLinkResponse(\Illuminate\Http\Request $request, $response)
+    {
+        if ($request->expectsJson()) {
+            return new \Illuminate\Http\JsonResponse(['message' => trans($response)], 200);
+        }
+
+        return back()
+            ->with('success', trans($response));
+    }
+
     public function showLinkRequestForm()
     {
         $pageConfigs = [

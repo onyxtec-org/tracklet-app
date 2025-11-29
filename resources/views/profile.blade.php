@@ -78,7 +78,7 @@
                             <!-- form -->
                             {{-- TODO: Edit Form to better reflect field data --}}
                             <form class="jquery-val-form mt-2" method="POST" enctype="multipart/form-data"
-                                action="">
+                                action="{{ route('profile.update') }}">
                                 @csrf
                                 @method('PUT')
                                 <div class="row">

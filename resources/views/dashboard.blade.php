@@ -531,7 +531,7 @@
                   <tbody>
                     @foreach($upcomingMaintenance as $maintenance)
                       <tr>
-                        <td>{{ $maintenance->asset->name }}</td>
+                        <td>{{ $maintenance->asset ? $maintenance->asset->name : 'N/A (Asset Deleted)' }}</td>
                         <td>{{ $maintenance->type }}</td>
                         <td>{{ $maintenance->scheduled_date->format('M d, Y') }}</td>
                         <td>

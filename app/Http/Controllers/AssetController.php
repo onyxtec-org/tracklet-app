@@ -263,6 +263,7 @@ class AssetController extends Controller
             return $this->respond([
                 'message' => 'Asset created successfully.',
                 'asset' => $asset->load('assignedToUser'),
+                'redirect' => route('assets.index'),
             ], null, [], 201);
 
         } catch (\Illuminate\Database\QueryException $e) {

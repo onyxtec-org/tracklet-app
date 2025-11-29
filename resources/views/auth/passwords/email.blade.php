@@ -9,12 +9,67 @@
 
 @section('content')
 <div class="auth-wrapper auth-v1 px-2">
+  
   <div class="auth-inner py-2">
+    @if (session('success'))
+    <div class="alert alert-success border-left-3 border-left-success alert-dismissible fade show shadow-sm mb-2" role="alert">
+        <div class="alert-body">
+            <div class="d-flex align-items-center">
+                <i data-feather="check-circle" class="font-medium-3 mr-2"></i>
+                <div>
+                    <strong class="d-block mb-50">Success!</strong>
+                    <span>{{ session('success') }}</span>
+                </div>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </div>
+    @endif
+  
+    @if (session('error'))
+    <div class="alert alert-danger border-left-3 border-left-danger alert-dismissible fade show shadow-sm mb-2" role="alert">
+        <div class="alert-body">
+            <div class="d-flex align-items-center">
+                <i data-feather="x-circle" class="font-medium-3 mr-2"></i>
+                <div>
+                    <strong class="d-block mb-50">Error!</strong>
+                    <span>{{ session('error') }}</span>
+                </div>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </div>
+    @endif
+  
+    @if ($errors->any())
+    <div class="alert alert-danger border-left-3 border-left-danger alert-dismissible fade show alert-validation-msg shadow-sm mb-2" role="alert">
+        <div class="alert-body">
+            <div class="d-flex align-items-start">
+                <i data-feather="alert-circle" class="font-medium-3 mr-2 mt-25"></i>
+                <div class="flex-grow-1">
+                    <h6 class="alert-heading mb-1 font-weight-bolder">Validation Errors</h6>
+                    <ul class="mb-0 pl-1">
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </div>
+    @endif
     <!-- Forgot Password v1 -->
     <div class="card mb-0">
       <div class="card-body">
-        <a href="javascript:void(0);" class="brand-logo">
-          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet">
+        <a href="javascript:void(0);" class="brand-logo" style="display: flex; justify-content: center; align-items: center; margin-bottom: 1.5rem; padding: 0.5rem 0;">
+          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet" style="max-width: 200px; max-height: 100px; height: auto; width: auto; object-fit: contain; display: block;">
         </a>
 
         <h4 class="card-title mb-1">Forgot Password? 🔒</h4>

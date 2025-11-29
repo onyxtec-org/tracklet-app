@@ -14,8 +14,8 @@
     <!-- Login v1 -->
     <div class="card mb-0">
       <div class="card-body">
-        <a href="javascript:void(0);" class="brand-logo">
-          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet">
+        <a href="javascript:void(0);" class="brand-logo" style="display: flex; justify-content: center; align-items: center; margin-bottom: 1.5rem; padding: 0.5rem 0;">
+          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet" style="max-width: 200px; max-height: 100px; height: auto; width: auto; object-fit: contain; display: block;">
         </a>
 
         <h4 class="card-title mb-1">Welcome to TrackLet! 👋</h4>

@@ -182,6 +182,7 @@ class MaintenanceController extends Controller
         return $this->respond([
             'message' => 'Maintenance record created successfully.',
             'record' => $record->load(['asset', 'user']),
+            'redirect' => route('maintenance.index'),
         ], null, [], 201);
     }
 

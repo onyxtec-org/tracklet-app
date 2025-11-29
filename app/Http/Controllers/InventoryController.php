@@ -145,9 +145,9 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:255',
-            'quantity' => 'required|integer|min:0',
-            'minimum_threshold' => 'required|integer|min:0',
-            'unit_price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1',
+            'minimum_threshold' => 'required|integer|min:1',
+            'unit_price' => 'required|numeric|min:1',
             'unit' => 'nullable|string|max:50',
         ]);
 
@@ -159,6 +159,7 @@ class InventoryController extends Controller
         return $this->respond([
             'message' => 'Inventory item created successfully.',
             'item' => $item,
+            'redirect' => route('inventory.items.index'),
         ], null, [], 201);
     }
 
@@ -280,9 +281,9 @@ class InventoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:255',
-            'quantity' => 'required|integer|min:0',
-            'minimum_threshold' => 'required|integer|min:0',
-            'unit_price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1',
+            'minimum_threshold' => 'required|integer|min:1',
+            'unit_price' => 'required|numeric|min:1',
             'unit' => 'nullable|string|max:50',
         ]);
 

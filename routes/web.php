@@ -12,6 +12,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LegalController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,6 +29,12 @@ use Illuminate\Support\Facades\Auth;
 
 // Auth routes
 Auth::routes();
+
+// Public legal pages
+Route::get('/terms', [LegalController::class, 'terms'])
+    ->name('legal.terms');
+Route::get('/privacy', [LegalController::class, 'privacy'])
+    ->name('legal.privacy');
 
 // Public organization registration routes
 Route::get('/register-organization', [\App\Http\Controllers\OrganizationRegistrationController::class, 'show'])
@@ -69,6 +76,7 @@ Route::group(['middleware' => ['auth', 'require.password.change']], function () 
     
     // Profile Routes (accessible without subscription)
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePasswordProfile'])->name('password.profile.update');
     
     // Dashboard Routes (requires subscription, except for super admin)

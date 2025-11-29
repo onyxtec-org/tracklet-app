@@ -14,8 +14,8 @@
     padding: 0.5rem 0;
   }
   .brand-logo img {
-    max-width: 150px;
-    max-height: 80px;
+    max-width: 200px;
+    max-height: 100px;
     height: auto;
     width: auto;
     object-fit: contain;
@@ -50,20 +50,20 @@
           </div>
 
           <div class="form-group">
-            <div class="d-flex justify-content-between">
-              <label for="login-password">Password</label>
-              @if (Route::has('password.request'))
-              <a href="{{ route('password.request') }}">
-                <small>Forgot Password?</small>
-              </a>
-              @endif
-            </div>
+            <label for="login-password">Password</label>
             <div class="input-group input-group-merge form-password-toggle">
               <input type="password" class="form-control form-control-merge" id="login-password" name="password" tabindex="2" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="login-password" />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>
             </div>
+            @if (Route::has('password.request'))
+            <div class="text-right mt-1">
+              <a href="{{ route('password.request') }}">
+                <small>Forgot Password?</small>
+              </a>
+            </div>
+            @endif
           </div>
           <div class="form-group">
             <div class="custom-control custom-checkbox">

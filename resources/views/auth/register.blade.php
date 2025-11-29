@@ -13,8 +13,8 @@
     <!-- Register v1 -->
     <div class="card mb-0">
       <div class="card-body">
-        <a href="javascript:void(0);" class="brand-logo">
-          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet">
+        <a href="javascript:void(0);" class="brand-logo" style="display: flex; justify-content: center; align-items: center; margin-bottom: 1.5rem; padding: 0.5rem 0;">
+          <img src="{{asset('images/logo/LOGO.svg')}}" alt="TrackLet" style="max-width: 200px; max-height: 100px; height: auto; width: auto; object-fit: contain; display: block;">
         </a>
 
         <h4 class="card-title mb-1">Adventure starts here 🚀</h4>
@@ -72,7 +72,7 @@
             <div class="custom-control custom-checkbox">
               <input class="custom-control-input" type="checkbox" id="register-privacy-policy" tabindex="4" />
               <label class="custom-control-label" for="register-privacy-policy">
-                I agree to <a href="javascript:void(0);">privacy policy & terms</a>
+                I agree to the <a href="{{ route('legal.terms') }}" target="_blank">Terms and Conditions</a> and <a href="{{ route('legal.privacy') }}" target="_blank">Privacy Policy</a>
               </label>
             </div>
           </div>

@@ -147,7 +147,7 @@ class ExpenseController extends Controller
             'amount' => 'required|numeric|min:0',
             'vendor_payee' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // 10MB max
         ], [
             'expense_category_id.required_without' => 'Please select a category or create a new one.',
             'category_name.required_without' => 'Please enter a category name or select an existing category.',
@@ -187,6 +187,7 @@ class ExpenseController extends Controller
         return $this->respond([
             'message' => 'Expense created successfully.',
             'expense' => $expense->load(['category', 'user']),
+            'redirect' => route('expenses.index'),
         ], null, [], 201);
     }
 

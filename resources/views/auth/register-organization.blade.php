@@ -18,8 +18,8 @@
     padding: 0.5rem 0;
   }
   .brand-logo img {
-    max-width: 150px;
-    max-height: 80px;
+    max-width: 200px;
+    max-height: 100px;
     height: auto;
     width: auto;
     object-fit: contain;
@@ -99,7 +99,7 @@
             <div class="custom-control custom-checkbox">
               <input class="custom-control-input" type="checkbox" id="register-privacy-policy" tabindex="6" />
               <label class="custom-control-label" for="register-privacy-policy">
-                I agree to <a href="javascript:void(0);">privacy policy & terms</a>
+                I agree to the <a href="{{ route('legal.terms') }}" target="_blank">Terms and Conditions</a> and <a href="{{ route('legal.privacy') }}" target="_blank">Privacy Policy</a>
               </label>
             </div>
           </div>

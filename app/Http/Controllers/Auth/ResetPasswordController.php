@@ -29,6 +29,23 @@ class ResetPasswordController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
+    /**
+     * Get the response for a successful password reset.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $response
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
+    protected function sendResetResponse(Request $request, $response)
+    {
+        if ($request->expectsJson()) {
+            return new \Illuminate\Http\JsonResponse(['message' => trans($response)], 200);
+        }
+
+        return redirect('/password/reset?email=' . urlencode($request->email))
+            ->with('success', trans($response));
+    }
+
     public function showResetForm(Request $request, $token = null)
     {
         $pageConfigs = [
