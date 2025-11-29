@@ -85,11 +85,13 @@ class DashboardControllerTest extends TestCaseBase
         $category = ExpenseCategory::factory()->forOrganization($this->organization->id)->create();
         Expense::factory()->count(3)->forOrganization($this->organization->id)->forCategory($category->id)->create([
             'expense_date' => now(),
-            'amount' => 100
+            'amount' => 100,
+            'approval_status' => 'approved'
         ]);
         Expense::factory()->count(2)->forOrganization($this->organization->id)->forCategory($category->id)->create([
             'expense_date' => now()->subMonth(),
-            'amount' => 50
+            'amount' => 50,
+            'approval_status' => 'approved'
         ]);
 
         $response = $this->actingAs($this->adminUser)->getJson('/api/dashboard');
