@@ -336,18 +336,21 @@ class ExpenseController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Expense updated successfully. If non-admin edits an expense, approval status is set to pending and requires admin approval.",
+     *         description="Expense updated successfully. Important: If a non-admin user (e.g., finance role) edits an expense, the approval status is automatically reset to 'pending' and requires admin approval, regardless of the expense's previous approval status.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Expense updated successfully. It is pending admin approval."),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="expense", type="object",
-     *                     @OA\Property(property="approval_status", type="string", enum={"pending", "approved", "rejected"})
+     *                     @OA\Property(property="approval_status", type="string", enum={"pending", "approved", "rejected"}, description="If edited by non-admin, this will always be 'pending'"),
+     *                     @OA\Property(property="approved_by", type="integer", nullable=true, description="Set to null when non-admin edits"),
+     *                     @OA\Property(property="approved_at", type="string", format="date-time", nullable=true, description="Set to null when non-admin edits"),
+     *                     @OA\Property(property="rejection_reason", type="string", nullable=true, description="Cleared when non-admin edits")
      *                 )
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
+     *     @OA\Response(response=403, description="Unauthorized access")
      * )
      */
     public function update(Request $request, Expense $expense)
@@ -443,12 +446,22 @@ class ExpenseController extends Controller
     /**
      * @OA\Delete(
      *     path="/api/expenses/{id}",
-     *     summary="Delete expense (Admin only)",
+     *     summary="Delete expense (Organization Admin only)",
      *     tags={"Expenses"},
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Expense deleted successfully"),
-     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Expense deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Expense deleted successfully.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized - Only organization administrators can delete expenses. Finance and other roles cannot delete expenses."
+     *     )
      * )
      */
     public function destroy(Expense $expense)

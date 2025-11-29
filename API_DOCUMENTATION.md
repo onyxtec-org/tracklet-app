@@ -638,11 +638,77 @@ Authorization: Bearer {token}
 **PUT** `/api/expenses/{id}`  
 **Auth:** Required | **Role:** `admin` or `finance`
 
-**Note:** If non-admin edits an approved/rejected expense, approval status resets to `pending`.
+**Request:**
+```json
+{
+  "expense_category_id": 1,
+  "category_name": "New Category",
+  "expense_date": "2025-11-28",
+  "amount": "150.00",
+  "vendor_payee": "Office Depot",
+  "description": "Office supplies"
+}
+```
+
+**Important Notes:**
+- **Admin users:** Can edit expenses without affecting approval status. The approval status remains unchanged.
+- **Non-admin users (e.g., finance role):** When editing an expense, the approval status is **automatically reset to `pending`** and requires admin approval, regardless of the expense's previous approval status (approved, rejected, or pending).
+- When non-admin edits, the following fields are automatically cleared: `approved_by`, `approved_at`, and `rejection_reason`.
+
+**Response (Non-Admin Edit):**
+```json
+{
+  "success": true,
+  "message": "Expense updated successfully. It is pending admin approval.",
+  "data": {
+    "expense": {
+      "id": 1,
+      "approval_status": "pending",
+      "approved_by": null,
+      "approved_at": null,
+      "rejection_reason": null
+    }
+  }
+}
+```
+
+**Response (Admin Edit):**
+```json
+{
+  "success": true,
+  "message": "Expense updated successfully.",
+  "data": {
+    "expense": {
+      "id": 1,
+      "approval_status": "approved",
+      "approved_by": 1,
+      "approved_at": "2025-11-28T10:30:00.000000Z"
+    }
+  }
+}
+```
 
 ### Delete Expense
 **DELETE** `/api/expenses/{id}`  
-**Auth:** Required | **Role:** `admin` or `finance`
+**Auth:** Required | **Role:** `admin` only
+
+**Important:** Only organization administrators can delete expenses. Finance role and other roles **cannot** delete expenses.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Expense deleted successfully."
+}
+```
+
+**Response (403) - Non-Admin Attempt:**
+```json
+{
+  "success": false,
+  "message": "Only administrators can delete expenses."
+}
+```
 
 ### Get Reports
 **GET** `/api/expenses/reports`  
@@ -653,11 +719,188 @@ Authorization: Bearer {token}
 **Query:** `?period=quarterly`
 
 ### List Categories
-**GET** `/api/expenses/categories`
+**GET** `/api/expenses/categories`  
+**Auth:** Required | **Role:** `admin` or `finance`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "categories": [
+      {
+        "id": 1,
+        "name": "Office Supplies",
+        "description": "Office related expenses",
+        "is_system": false,
+        "organization_id": 1
+      },
+      {
+        "id": 2,
+        "name": "Utilities",
+        "description": null,
+        "is_system": true,
+        "organization_id": 1
+      }
+    ]
+  }
+}
+```
+
+**Note:** 
+- Returns all expense categories for the organization
+- Categories are sorted alphabetically by name
+- System categories (`is_system: true`) are predefined and cannot be modified or deleted
 
 ### Create Category
 **POST** `/api/expenses/categories`  
-**Request:** `{"name": "Category Name", "description": "Optional"}`
+**Auth:** Required | **Role:** `admin` or `finance`
+
+**Request:**
+```json
+{
+  "name": "Office Supplies",
+  "description": "Office related expenses"
+}
+```
+
+**Request Fields:**
+- `name` (required, string, max 255): Category name. Must be unique within the organization.
+- `description` (optional, string): Optional description for the category.
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Expense category created successfully.",
+  "data": {
+    "category": {
+      "id": 1,
+      "name": "Office Supplies",
+      "description": "Office related expenses",
+      "is_system": false,
+      "organization_id": 1
+    }
+  }
+}
+```
+
+**Error Responses:**
+
+**Response (422) - Category Name Already Exists:**
+```json
+{
+  "success": false,
+  "message": "The name has already been taken.",
+  "errors": {
+    "name": ["The name has already been taken."]
+  }
+}
+```
+
+**Response (403) - User Not in Organization:**
+```json
+{
+  "success": false,
+  "message": "User does not belong to an organization."
+}
+```
+
+**Important Notes:**
+- Category names must be unique within your organization
+- Created categories have `is_system: false` and can be modified or deleted (if no expenses exist)
+- You can also create categories automatically when creating expenses using the `category_name` field in the expense creation endpoint
+
+### Update Category
+**PUT** `/api/expenses/categories/{id}`  
+**Auth:** Required | **Role:** `admin` or `finance`
+
+**Request:**
+```json
+{
+  "name": "Office Supplies Updated",
+  "description": "Updated description"
+}
+```
+
+**Request Fields:**
+- `name` (required, string, max 255): Category name. Must be unique within the organization.
+- `description` (optional, string): Optional description for the category.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Expense category updated successfully.",
+  "data": {
+    "category": {
+      "id": 1,
+      "name": "Office Supplies Updated",
+      "description": "Updated description",
+      "is_system": false,
+      "organization_id": 1
+    }
+  }
+}
+```
+
+**Error Responses:**
+
+**Response (403) - System Category Cannot Be Modified:**
+```json
+{
+  "success": false,
+  "message": "System categories cannot be modified."
+}
+```
+
+**Response (422) - Category Name Already Exists:**
+```json
+{
+  "success": false,
+  "message": "The name has already been taken.",
+  "errors": {
+    "name": ["The name has already been taken."]
+  }
+}
+```
+
+**Note:** System categories (`is_system: true`) cannot be updated.
+
+### Delete Category
+**DELETE** `/api/expenses/categories/{id}`  
+**Auth:** Required | **Role:** `admin` or `finance`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Expense category deleted successfully."
+}
+```
+
+**Error Responses:**
+
+**Response (400) - Category Has Existing Expenses:**
+```json
+{
+  "success": false,
+  "message": "Cannot delete category with existing expenses."
+}
+```
+
+**Response (403) - System Category Cannot Be Deleted:**
+```json
+{
+  "success": false,
+  "message": "System categories cannot be deleted."
+}
+```
+
+**Important Notes:**
+- Categories with existing expenses cannot be deleted
+- System categories (`is_system: true`) cannot be deleted
+- Only custom categories created by your organization can be deleted
 
 ---
 

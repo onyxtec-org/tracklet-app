@@ -17,7 +17,25 @@ class ExpenseCategoryController extends Controller
      *     summary="List expense categories",
      *     tags={"Expenses"},
      *     security={{"sanctum": {}}},
-     *     @OA\Response(response=200, description="List of categories")
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of expense categories for the organization",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="categories", type="array",
+     *                     @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Office Supplies"),
+     *                         @OA\Property(property="description", type="string", nullable=true, example="Office related expenses"),
+     *                         @OA\Property(property="is_system", type="boolean", example=false),
+     *                         @OA\Property(property="organization_id", type="integer", example=1)
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Unauthorized - User does not belong to an organization")
      * )
      */
     public function index()
@@ -49,11 +67,41 @@ class ExpenseCategoryController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="Office Supplies"),
-     *             @OA\Property(property="description", type="string", example="Office related expenses")
+     *             @OA\Property(property="name", type="string", example="Office Supplies", description="Category name (must be unique within organization)"),
+     *             @OA\Property(property="description", type="string", nullable=true, example="Office related expenses", description="Optional category description")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Category created successfully")
+     *     @OA\Response(
+     *         response=201,
+     *         description="Category created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Expense category created successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="category", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Office Supplies"),
+     *                     @OA\Property(property="description", type="string", nullable=true, example="Office related expenses"),
+     *                     @OA\Property(property="is_system", type="boolean", example=false),
+     *                     @OA\Property(property="organization_id", type="integer", example=1)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error - Category name already exists or validation failed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="The name has already been taken."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="name", type="array",
+     *                     @OA\Items(type="string", example="The name has already been taken.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Unauthorized - User does not belong to an organization")
      * )
      */
     public function store(Request $request)
@@ -88,16 +136,32 @@ class ExpenseCategoryController extends Controller
      *     summary="Update expense category",
      *     tags={"Expenses"},
      *     security={{"sanctum": {}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"), description="Category ID"),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"name"},
-     *             @OA\Property(property="name", type="string"),
-     *             @OA\Property(property="description", type="string")
+     *             @OA\Property(property="name", type="string", example="Office Supplies", description="Category name (must be unique within organization)"),
+     *             @OA\Property(property="description", type="string", nullable=true, example="Office related expenses", description="Optional category description")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Category updated successfully")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Expense category updated successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="category", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Office Supplies"),
+     *                     @OA\Property(property="description", type="string", nullable=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Unauthorized - System categories cannot be modified or user does not belong to organization"),
+     *     @OA\Response(response=422, description="Validation error - Category name already exists")
      * )
      */
     public function update(Request $request, ExpenseCategory $expenseCategory)
@@ -131,8 +195,24 @@ class ExpenseCategoryController extends Controller
      *     summary="Delete expense category",
      *     tags={"Expenses"},
      *     security={{"sanctum": {}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Category deleted successfully")
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"), description="Category ID"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Expense category deleted successfully.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Cannot delete category with existing expenses",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Cannot delete category with existing expenses.")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Unauthorized - System categories cannot be deleted or user does not belong to organization")
      * )
      */
     public function destroy(ExpenseCategory $expenseCategory)
