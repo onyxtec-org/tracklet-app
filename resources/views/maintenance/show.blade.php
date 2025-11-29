@@ -23,7 +23,13 @@
                         <table class="table table-borderless">
                             <tr>
                                 <th width="40%">Asset:</th>
-                                <td><strong>{{ $record->asset->name }}</strong><br><small class="text-muted">{{ $record->asset->asset_code }}</small></td>
+                                <td>
+                                    @if($record->asset)
+                                        <strong>{{ $record->asset->name }}</strong><br><small class="text-muted">{{ $record->asset->asset_code }}</small>
+                                    @else
+                                        <strong class="text-muted">N/A (Asset Deleted)</strong>
+                                    @endif
+                                </td>
                             </tr>
                             <tr>
                                 <th>Type:</th>

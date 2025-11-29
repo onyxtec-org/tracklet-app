@@ -41,7 +41,13 @@
                         <tbody>
                             @forelse($records as $record)
                             <tr>
-                                <td><strong>{{ $record->asset->name }}</strong><br><small class="text-muted">{{ $record->asset->asset_code }}</small></td>
+                                <td>
+                                    @if($record->asset)
+                                        <strong>{{ $record->asset->name }}</strong><br><small class="text-muted">{{ $record->asset->asset_code }}</small>
+                                    @else
+                                        <strong class="text-muted">N/A (Asset Deleted)</strong>
+                                    @endif
+                                </td>
                                 <td><span class="badge badge-light-primary">{{ ucfirst($record->type) }}</span></td>
                                 <td>
                                     <strong>{{ $record->scheduled_date->format('M d, Y') }}</strong><br>

@@ -18,3 +18,5 @@ yarn-error.log
 /vuexy-shell-scripts
 supervisord.log
 supervisord.pid
+/storage/framework*
+/storage/logs*
