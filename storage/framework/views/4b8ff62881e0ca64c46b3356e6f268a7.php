@@ -75,7 +75,13 @@
                         <tbody>
                             <?php $__empty_1 = true; $__currentLoopData = $records; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $record): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td><strong><?php echo e($record->asset->name); ?></strong><br><small class="text-muted"><?php echo e($record->asset->asset_code); ?></small></td>
+                                <td>
+                                    <?php if($record->asset): ?>
+                                        <strong><?php echo e($record->asset->name); ?></strong><br><small class="text-muted"><?php echo e($record->asset->asset_code); ?></small>
+                                    <?php else: ?>
+                                        <strong class="text-muted">N/A (Asset Deleted)</strong>
+                                    <?php endif; ?>
+                                </td>
                                 <td><span class="badge badge-light-primary"><?php echo e(ucfirst($record->type)); ?></span></td>
                                 <td><?php echo e($record->scheduled_date->format('M d, Y')); ?></td>
                                 <td>

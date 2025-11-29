@@ -230,4 +230,33 @@
             }
         });
 </script>
+
+{{-- Profile form validation --}}
+<script>
+    $(document).ready(function() {
+        // Add custom regex validation method
+        $.validator.addMethod("regex", function(value, element, regexp) {
+            var re = new RegExp(regexp);
+            return this.optional(element) || re.test(value);
+        }, "Please check your input.");
+
+        // Validate profile form
+        $('.jquery-val-form').validate({
+            rules: {
+                'name': {
+                    required: true,
+                    minlength: 2,
+                    regex: /^[a-zA-Z0-9\s]+$/
+                }
+            },
+            messages: {
+                'name': {
+                    required: 'Please enter your name',
+                    minlength: 'Name must be at least 2 characters',
+                    regex: 'Name may only contain letters, numbers, and spaces. Special characters are not allowed.'
+                }
+            }
+        });
+    });
+</script>
 @endsection

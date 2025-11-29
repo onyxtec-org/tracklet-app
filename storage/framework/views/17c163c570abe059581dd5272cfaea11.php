@@ -12,8 +12,8 @@
     padding: 0.5rem 0;
   }
   .brand-logo img {
-    max-width: 150px;
-    max-height: 80px;
+    max-width: 200px;
+    max-height: 100px;
     height: auto;
     width: auto;
     object-fit: contain;

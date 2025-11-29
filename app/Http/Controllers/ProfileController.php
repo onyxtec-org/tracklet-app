@@ -27,7 +27,10 @@ class ProfileController extends Controller
         $user = auth()->user();
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s]+$/|min:2',
+        ], [
+            'name.regex' => 'The name field may only contain letters, numbers, and spaces. Special characters are not allowed.',
+            'name.min' => 'The name must be at least 2 characters.',
         ]);
 
         $user->name = $validated['name'];

@@ -34,9 +34,13 @@ class OrganizationRegistrationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'organization_name' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email|unique:organizations,email',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s]+$/|min:2',
+            'email' => 'required|email:rfc,dns|unique:users,email|unique:organizations,email',
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'name.regex' => 'The name field may only contain letters, numbers, and spaces. Special characters are not allowed.',
+            'name.min' => 'The name must be at least 2 characters.',
+            'email.email' => 'Please enter a valid email address.',
         ]);
 
         if ($validator->fails()) {
