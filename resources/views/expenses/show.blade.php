@@ -9,10 +9,12 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title">Expense Details</h4>
                 <div>
+                    @if(!auth()->user()->hasRole('general_staff'))
                     <a href="{{ route('expenses.edit', $expense) }}" class="btn btn-primary">
                         <i data-feather="edit" class="mr-1"></i> Edit
                     </a>
-                    <a href="{{ route('expenses.index') }}" class="btn btn-outline-secondary">
+                    @endif
+                    <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.expenses' : 'expenses.index') }}" class="btn btn-outline-secondary">
                         <i data-feather="arrow-left" class="mr-1"></i> Back
                     </a>
                 </div>

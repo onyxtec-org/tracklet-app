@@ -24,8 +24,9 @@ class EnsureOrganizationIsSubscribed
 
         // Check if user belongs to an organization
         if (!$user || !$user->organization) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'You must belong to an organization.',
                 ], 403);
             }
@@ -34,8 +35,9 @@ class EnsureOrganizationIsSubscribed
 
         // Check if organization is subscribed
         if (!$user->organization->isSubscribed()) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*') || $request->ajax()) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'Your organization subscription has expired. Please renew your subscription.',
                     'redirect' => route('subscription.checkout'),
                 ], 402);

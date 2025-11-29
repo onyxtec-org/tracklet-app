@@ -9,10 +9,12 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title">{{ $item->name }}</h4>
                 <div>
+                    @if(!auth()->user()->hasRole('general_staff'))
                     <a href="{{ route('inventory.items.edit', $item) }}" class="btn btn-primary">
                         <i data-feather="edit" class="mr-1"></i> Edit
                     </a>
-                    <a href="{{ route('inventory.items.index') }}" class="btn btn-outline-secondary">
+                    @endif
+                    <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.inventory' : 'inventory.items.index') }}" class="btn btn-outline-secondary">
                         <i data-feather="arrow-left" class="mr-1"></i> Back
                     </a>
                 </div>
@@ -68,6 +70,7 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5>Stock Transactions</h5>
+                                @if(!auth()->user()->hasRole('general_staff'))
                                 <div>
                                     <button type="button" class="btn btn-sm btn-success mr-1" data-toggle="modal" data-target="#stockModal" onclick="setStockType('in')">
                                         <i data-feather="arrow-down" class="mr-1"></i> Stock In
@@ -76,6 +79,7 @@
                                         <i data-feather="arrow-up" class="mr-1"></i> Stock Out
                                     </button>
                                 </div>
+                                @endif
                             </div>
                             <div class="card-body">
                                 @php

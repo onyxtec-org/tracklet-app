@@ -15,6 +15,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title">Expenses</h4>
+                @if(!auth()->user()->hasRole('general_staff'))
                 <div>
                     <a href="{{ route('expenses.reports') }}" class="btn btn-outline-primary mr-1">
                         <i data-feather="file-text" class="mr-1"></i> Reports
@@ -23,10 +24,11 @@
                         <i data-feather="plus" class="mr-1"></i> Add Expense
                     </a>
                 </div>
+                @endif
             </div>
             <div class="card-body">
                 <!-- Filters -->
-                <form method="GET" action="{{ route('expenses.index') }}" class="mb-2">
+                <form method="GET" action="{{ route(auth()->user()->hasRole('general_staff') ? 'view.expenses' : 'expenses.index') }}" class="mb-2">
                     <div class="row">
                         <div class="col-md-3">
                             <label>Category</label>
@@ -53,7 +55,7 @@
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary mr-1">Filter</button>
-                            <a href="{{ route('expenses.index') }}" class="btn btn-outline-secondary">Clear</a>
+                            <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.expenses' : 'expenses.index') }}" class="btn btn-outline-secondary">Clear</a>
                         </div>
                     </div>
                 </form>
@@ -82,9 +84,10 @@
                                 <td>{{ $expense->user->name }}</td>
                                 <td>
                                     <div class="d-inline-flex">
-                                        <a href="{{ route('expenses.show', $expense) }}" class="btn btn-sm btn-icon" title="View">
+                                        <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.expenses.show' : 'expenses.show', $expense) }}" class="btn btn-sm btn-icon" title="View">
                                             <i data-feather="eye"></i>
                                         </a>
+                                        @if(!auth()->user()->hasRole('general_staff'))
                                         <a href="{{ route('expenses.edit', $expense) }}" class="btn btn-sm btn-icon" title="Edit">
                                             <i data-feather="edit"></i>
                                         </a>
@@ -95,6 +98,7 @@
                                                 <i data-feather="trash-2"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

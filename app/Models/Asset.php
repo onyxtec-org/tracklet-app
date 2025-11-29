@@ -112,23 +112,42 @@ class Asset extends Model
 
     /**
      * Generate unique asset code
+     * Retries if code already exists (handles race conditions)
      */
-    public static function generateAssetCode(Organization $organization): string
+    public static function generateAssetCode(Organization $organization, int $maxAttempts = 10): string
     {
         $prefix = strtoupper(substr($organization->slug, 0, 3));
         $year = date('Y');
-        $lastAsset = self::where('organization_id', $organization->id)
-            ->where('asset_code', 'like', "{$prefix}-{$year}-%")
-            ->orderBy('asset_code', 'desc')
-            ->first();
+        
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            // Get the last asset code for this organization and year (including soft-deleted)
+            $lastAsset = self::withTrashed()
+                ->where('organization_id', $organization->id)
+                ->where('asset_code', 'like', "{$prefix}-{$year}-%")
+                ->orderBy('asset_code', 'desc')
+                ->first();
 
-        if ($lastAsset) {
-            $lastNumber = (int) substr($lastAsset->asset_code, -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
+            if ($lastAsset) {
+                $lastNumber = (int) substr($lastAsset->asset_code, -4);
+                $newNumber = str_pad($lastNumber + 1 + $attempt, 4, '0', STR_PAD_LEFT);
+            } else {
+                $newNumber = str_pad(1 + $attempt, 4, '0', STR_PAD_LEFT);
+            }
+
+            $assetCode = "{$prefix}-{$year}-{$newNumber}";
+            
+            // Check if this code already exists (including soft-deleted)
+            $exists = self::withTrashed()
+                ->where('organization_id', $organization->id)
+                ->where('asset_code', $assetCode)
+                ->exists();
+            
+            if (!$exists) {
+                return $assetCode;
+            }
         }
-
-        return "{$prefix}-{$year}-{$newNumber}";
+        
+        // If we've exhausted attempts, throw an exception
+        throw new \Exception("Unable to generate unique asset code after {$maxAttempts} attempts. Please try again.");
     }
 }

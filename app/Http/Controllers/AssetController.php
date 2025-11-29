@@ -175,8 +175,55 @@ class AssetController extends Controller
 
         DB::beginTransaction();
         try {
-            // Generate unique asset code
-            $assetCode = Asset::generateAssetCode($organization);
+            // Lock all assets for this organization/year to prevent race conditions
+            $prefix = strtoupper(substr($organization->slug, 0, 3));
+            $year = date('Y');
+            $pattern = "{$prefix}-{$year}-%";
+            
+            // Get all existing codes for this org/year (with lock to prevent concurrent access)
+            $existingCodes = Asset::withTrashed()
+                ->where('organization_id', $organization->id)
+                ->where('asset_code', 'like', $pattern)
+                ->lockForUpdate()
+                ->pluck('asset_code')
+                ->toArray();
+            
+            // Find the highest number
+            $maxNumber = 0;
+            foreach ($existingCodes as $code) {
+                $number = (int) substr($code, -4);
+                if ($number > $maxNumber) {
+                    $maxNumber = $number;
+                }
+            }
+            
+            // Generate unique code starting from maxNumber + 1
+            $maxAttempts = 20;
+            $assetCode = null;
+            
+            for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+                $newNumber = str_pad($maxNumber + 1 + $attempt, 4, '0', STR_PAD_LEFT);
+                $candidateCode = "{$prefix}-{$year}-{$newNumber}";
+                
+                // Double-check it doesn't exist (shouldn't with lock, but safety check)
+                if (!in_array($candidateCode, $existingCodes)) {
+                    // Final check in database with lock
+                    $exists = Asset::withTrashed()
+                        ->where('organization_id', $organization->id)
+                        ->where('asset_code', $candidateCode)
+                        ->lockForUpdate()
+                        ->exists();
+                    
+                    if (!$exists) {
+                        $assetCode = $candidateCode;
+                        break;
+                    }
+                }
+            }
+            
+            if (!$assetCode) {
+                throw new \Exception("Unable to generate unique asset code after {$maxAttempts} attempts. Please try again.");
+            }
 
             $asset = Asset::create([
                 'organization_id' => $organization->id,
@@ -218,6 +265,13 @@ class AssetController extends Controller
                 'asset' => $asset->load('assignedToUser'),
             ], null, [], 201);
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            // Check if it's a duplicate asset_code error (shouldn't happen with proper locking, but keep as safety)
+            if ($e->getCode() == 23000 && str_contains($e->getMessage(), 'asset_code')) {
+                return $this->respondError('An asset with that code already exists. Please try again or contact support if the issue persists.', 400);
+            }
+            return $this->respondError('Failed to create asset: ' . $e->getMessage(), 400);
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->respondError('Failed to create asset: ' . $e->getMessage(), 400);

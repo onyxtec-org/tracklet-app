@@ -152,9 +152,17 @@ Route::group(['middleware' => ['auth', 'require.password.change']], function () 
         
         // General Staff - Read-only access
         Route::group(['middleware' => 'role:general_staff', 'prefix' => 'view', 'as' => 'view.'], function () {
+            // Expenses - Read-only
             Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses');
+            Route::get('expenses/{expense}', [ExpenseController::class, 'show'])->name('expenses.show');
+            
+            // Inventory - Read-only
             Route::get('inventory', [InventoryController::class, 'index'])->name('inventory');
+            Route::get('inventory/items/{inventoryItem}', [InventoryController::class, 'show'])->name('inventory.items.show');
+            
+            // Assets - Read-only
             Route::get('assets', [AssetController::class, 'index'])->name('assets');
+            Route::get('assets/{asset}', [AssetController::class, 'show'])->name('assets.show');
         });
     });
 });

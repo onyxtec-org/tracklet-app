@@ -9,10 +9,12 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title">{{ $asset->name }} - {{ $asset->asset_code }}</h4>
                 <div>
+                    @if(!auth()->user()->hasRole('general_staff'))
                     <a href="{{ route('assets.edit', $asset) }}" class="btn btn-primary">
                         <i data-feather="edit" class="mr-1"></i> Edit
                     </a>
-                    <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary">
+                    @endif
+                    <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.assets' : 'assets.index') }}" class="btn btn-outline-secondary">
                         <i data-feather="arrow-left" class="mr-1"></i> Back
                     </a>
                 </div>
@@ -127,9 +129,11 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h5>Asset Movements</h5>
+                                @if(!auth()->user()->hasRole('general_staff'))
                                 <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#movementModal">
                                     <i data-feather="plus" class="mr-1"></i> Log Movement
                                 </button>
+                                @endif
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">

@@ -14,6 +14,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title">Inventory Items</h4>
+                @if(!auth()->user()->hasRole('general_staff'))
                 <div>
                     @if($low_stock_count > 0)
                         <a href="{{ route('inventory.low-stock') }}" class="btn btn-warning mr-1">
@@ -24,10 +25,11 @@
                         <i data-feather="plus" class="mr-1"></i> Add Item
                     </a>
                 </div>
+                @endif
             </div>
             <div class="card-body">
                 <!-- Filters -->
-                <form method="GET" action="{{ route('inventory.items.index') }}" class="mb-2">
+                <form method="GET" action="{{ route(auth()->user()->hasRole('general_staff') ? 'view.inventory' : 'inventory.items.index') }}" class="mb-2">
                     <div class="row">
                         <div class="col-md-3">
                             <label>Category</label>
@@ -51,7 +53,7 @@
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary mr-1">Filter</button>
-                            <a href="{{ route('inventory.items.index') }}" class="btn btn-outline-secondary">Clear</a>
+                            <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.inventory' : 'inventory.items.index') }}" class="btn btn-outline-secondary">Clear</a>
                         </div>
                     </div>
                 </form>
@@ -88,9 +90,10 @@
                                 </td>
                                 <td>
                                     <div class="d-inline-flex">
-                                        <a href="{{ route('inventory.items.show', $item) }}" class="btn btn-sm btn-icon" title="View">
+                                        <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.inventory.items.show' : 'inventory.items.show', $item) }}" class="btn btn-sm btn-icon" title="View">
                                             <i data-feather="eye"></i>
                                         </a>
+                                        @if(!auth()->user()->hasRole('general_staff'))
                                         <button type="button" class="btn btn-sm btn-icon text-success" title="Stock In" data-toggle="modal" data-target="#stockModal" onclick="openStockModal({{ $item->id }}, 'in', '{{ $item->name }}')">
                                             <i data-feather="arrow-down"></i>
                                         </button>
@@ -107,6 +110,7 @@
                                                 <i data-feather="trash-2"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

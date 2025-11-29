@@ -14,9 +14,11 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title">Assets</h4>
+                @if(!auth()->user()->hasRole('general_staff'))
                 <a href="{{ route('assets.create') }}" class="btn btn-primary">
                     <i data-feather="plus" class="mr-1"></i> Add Asset
                 </a>
+                @endif
             </div>
             <div class="card-body">
                 <!-- Summary Cards -->
@@ -56,7 +58,7 @@
                 </div>
 
                 <!-- Filters -->
-                <form method="GET" action="{{ route('assets.index') }}" class="mb-2">
+                <form method="GET" action="{{ route(auth()->user()->hasRole('general_staff') ? 'view.assets' : 'assets.index') }}" class="mb-2">
                     <div class="row">
                         <div class="col-md-3">
                             <label>Status</label>
@@ -93,7 +95,7 @@
                     <div class="row mt-2">
                         <div class="col-md-12">
                             <button type="submit" class="btn btn-primary mr-1">Filter</button>
-                            <a href="{{ route('assets.index') }}" class="btn btn-outline-secondary">Clear</a>
+                            <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.assets' : 'assets.index') }}" class="btn btn-outline-secondary">Clear</a>
                         </div>
                     </div>
                 </form>
@@ -140,9 +142,10 @@
                                 </td>
                                 <td>
                                     <div class="d-inline-flex">
-                                        <a href="{{ route('assets.show', $asset) }}" class="btn btn-sm btn-icon" title="View">
+                                        <a href="{{ route(auth()->user()->hasRole('general_staff') ? 'view.assets.show' : 'assets.show', $asset) }}" class="btn btn-sm btn-icon" title="View">
                                             <i data-feather="eye"></i>
                                         </a>
+                                        @if(!auth()->user()->hasRole('general_staff'))
                                         <a href="{{ route('assets.edit', $asset) }}" class="btn btn-sm btn-icon" title="Edit">
                                             <i data-feather="edit"></i>
                                         </a>
@@ -153,6 +156,7 @@
                                                 <i data-feather="trash-2"></i>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
