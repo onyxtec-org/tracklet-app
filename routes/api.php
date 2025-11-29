@@ -111,15 +111,17 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
             Route::put('categories/{expenseCategory}', [ExpenseCategoryController::class, 'update'])->name('categories.update');
             Route::delete('categories/{expenseCategory}', [ExpenseCategoryController::class, 'destroy'])->name('categories.destroy');
             
-            // Expenses
+            // Expenses - Specific routes must come before resource routes
+            Route::get('reports', [ExpenseController::class, 'reports'])->name('reports');
+            Route::get('charts', [ExpenseController::class, 'charts'])->name('charts');
+            Route::get('export', [ExpenseController::class, 'export'])->name('export');
+            
+            // Resource routes
             Route::get('/', [ExpenseController::class, 'index'])->name('index');
             Route::post('/', [ExpenseController::class, 'store'])->name('store');
             Route::get('{expense}', [ExpenseController::class, 'show'])->name('show');
             Route::put('{expense}', [ExpenseController::class, 'update'])->name('update');
             Route::delete('{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
-            Route::get('reports', [ExpenseController::class, 'reports'])->name('reports');
-            Route::get('charts', [ExpenseController::class, 'charts'])->name('charts');
-            Route::get('export', [ExpenseController::class, 'export'])->name('export');
         });
         
         // Inventory Management API (Admin Support role)
@@ -150,10 +152,12 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
         Route::middleware('role_or_permission:admin|admin_support')->prefix('maintenance')->as('api.maintenance.')->group(function () {
             Route::get('/', [MaintenanceController::class, 'index'])->name('index');
             Route::post('/', [MaintenanceController::class, 'store'])->name('store');
+            // Specific routes must come before resource routes
+            Route::get('upcoming', [MaintenanceController::class, 'upcoming'])->name('upcoming');
+            // Resource routes
             Route::get('{maintenanceRecord}', [MaintenanceController::class, 'show'])->name('show');
             Route::put('{maintenanceRecord}', [MaintenanceController::class, 'update'])->name('update');
             Route::delete('{maintenanceRecord}', [MaintenanceController::class, 'destroy'])->name('destroy');
-            Route::get('upcoming', [MaintenanceController::class, 'upcoming'])->name('upcoming');
         });
         
         // General Staff - Read-only API access

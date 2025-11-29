@@ -22,7 +22,6 @@
             <table class="table organizations-table" id="organizations-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Admin</th>
@@ -82,7 +81,6 @@ $(function() {
             }
         },
         columns: [
-            { data: 'id' },
             { data: 'name' },
             { data: 'email', defaultContent: '-' },
             { 
@@ -177,7 +175,7 @@ $(function() {
                 }
             }
         ],
-        order: [[0, 'desc']],
+        order: [[0, 'asc']],
         dom: '<"card-header border-bottom p-1"<"head-label"><"dt-action-buttons text-right">><"d-flex justify-content-between align-items-center mx-0 row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>t<"d-flex justify-content-between mx-0 row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
         displayLength: 10,
         lengthMenu: [10, 25, 50, 75, 100],

@@ -57,14 +57,30 @@ if ($user) {
                 break;
               }
             }
+            
+            // Special case: "View Only" menu items should ONLY be visible to general_staff
+            // Super Admin should NOT see these items
+            if (isset($menu->slug) && strpos($menu->slug, 'view.') === 0) {
+              if ($user->isSuperAdmin()) {
+                $showMenu = false;
+              } else {
+                // Only show if user is general_staff
+                $showMenu = $user->hasRole('general_staff');
+              }
+            }
           } elseif (isset($menu->role) && $user) {
             // Backward compatibility with single role
             $showMenu = $user->hasRole($menu->role);
           }
           
-          // Super admin can see everything
+          // Super admin can see everything EXCEPT "View Only" items
           if ($user && $user->isSuperAdmin()) {
-            $showMenu = true;
+            // Don't show "View Only" items to Super Admin
+            if (!isset($menu->slug) || strpos($menu->slug, 'view.') !== 0) {
+              $showMenu = true;
+            } else {
+              $showMenu = false;
+            }
           }
           
           // Store visibility on the menu object
@@ -87,12 +103,32 @@ if ($user) {
       foreach ($navHeaders as $navHeaderIndex => $navHeader) {
         $hasVisibleItems = false;
         
-        // Check if any menu items under this navheader are visible
-        if (isset($menuItemMap[$navHeaderIndex])) {
-          foreach ($menuItemMap[$navHeaderIndex] as $item) {
-            if ($item->shouldShow) {
-              $hasVisibleItems = true;
-              break;
+        // Special case: "View Only" navheader should only show for general_staff
+        if (isset($navHeader->navheader) && $navHeader->navheader === 'View Only') {
+          if ($user && $user->isSuperAdmin()) {
+            $hasVisibleItems = false; // Super Admin should not see "View Only" section
+          } else {
+            // Check if user is general_staff
+            if ($user && $user->hasRole('general_staff')) {
+              // Check if any menu items under this navheader are visible
+              if (isset($menuItemMap[$navHeaderIndex])) {
+                foreach ($menuItemMap[$navHeaderIndex] as $item) {
+                  if ($item->shouldShow) {
+                    $hasVisibleItems = true;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          // Check if any menu items under this navheader are visible
+          if (isset($menuItemMap[$navHeaderIndex])) {
+            foreach ($menuItemMap[$navHeaderIndex] as $item) {
+              if ($item->shouldShow) {
+                $hasVisibleItems = true;
+                break;
+              }
             }
           }
         }
@@ -107,7 +143,7 @@ if ($user) {
       @if(isset($menu->navheader))
       @if(in_array($menu, $visibleNavHeaders))
       <li class="navigation-header">
-        <span>{{ $menu->navheader }}</span>
+        <span>{{ __('locale.'.$menu->navheader) }}</span>
         <i data-feather="more-horizontal"></i>
       </li>
       @endif
