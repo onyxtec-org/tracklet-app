@@ -106,17 +106,20 @@ class DashboardController extends Controller
             // Financial Snapshot (for Finance role or Admin)
             if ($user->hasAnyRole(['admin', 'finance'])) {
                 $currentMonth = Expense::where('organization_id', $organization->id)
+                    ->where('approval_status', 'approved')
                     ->whereMonth('expense_date', now()->month)
                     ->whereYear('expense_date', now()->year)
                     ->sum('amount');
 
                 $previousMonth = Expense::where('organization_id', $organization->id)
+                    ->where('approval_status', 'approved')
                     ->whereMonth('expense_date', now()->subMonth()->month)
                     ->whereYear('expense_date', now()->subMonth()->year)
                     ->sum('amount');
 
                 // Top 5 expense categories
                 $topCategories = Expense::where('organization_id', $organization->id)
+                    ->where('approval_status', 'approved')
                     ->whereMonth('expense_date', now()->month)
                     ->whereYear('expense_date', now()->year)
                     ->with('category')
@@ -191,6 +194,7 @@ class DashboardController extends Controller
                 $endDate = $startDate->copy()->addMonths(2)->endOfMonth();
 
                 $quarterlyExpenses = Expense::where('organization_id', $organization->id)
+                    ->where('approval_status', 'approved')
                     ->whereBetween('expense_date', [$startDate, $endDate])
                     ->with('category')
                     ->get();
@@ -211,6 +215,7 @@ class DashboardController extends Controller
                 for ($i = 2; $i >= 0; $i--) {
                     $month = $startDate->copy()->addMonths($i);
                     $monthExpenses = Expense::where('organization_id', $organization->id)
+                        ->where('approval_status', 'approved')
                         ->whereMonth('expense_date', $month->month)
                         ->whereYear('expense_date', $month->year)
                         ->sum('amount');

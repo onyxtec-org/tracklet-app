@@ -136,7 +136,7 @@ Route::middleware(['auth:sanctum', 'require.password.change'])->group(function (
             Route::post('{expense}/reject', [ExpenseController::class, 'reject'])->name('reject')->middleware('role:admin');
             Route::get('{expense}', [ExpenseController::class, 'show'])->name('show');
             Route::put('{expense}', [ExpenseController::class, 'update'])->name('update');
-            Route::delete('{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
+            Route::delete('{expense}', [ExpenseController::class, 'destroy'])->name('destroy')->middleware('role:admin');
         });
         
         // Inventory Management API (Admin Support role)

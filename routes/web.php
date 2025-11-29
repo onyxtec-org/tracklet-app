@@ -122,7 +122,7 @@ Route::group(['middleware' => ['auth', 'require.password.change']], function () 
             Route::get('{expense}', [ExpenseController::class, 'show'])->name('show');
             Route::get('{expense}/edit', [ExpenseController::class, 'edit'])->name('edit');
             Route::put('{expense}', [ExpenseController::class, 'update'])->name('update');
-            Route::delete('{expense}', [ExpenseController::class, 'destroy'])->name('destroy');
+            Route::delete('{expense}', [ExpenseController::class, 'destroy'])->name('destroy')->middleware('role:admin');
         });
         
         // Inventory Management Module (Admin Support role)

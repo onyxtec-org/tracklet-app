@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AssetMovement;
+use App\Models\MaintenanceRecord;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -155,6 +156,7 @@ class AssetController extends Controller
      *             @OA\Property(property="purchase_price", type="number", format="float", example="1200.00"),
      *             @OA\Property(property="vendor", type="string", example="Dell Inc"),
      *             @OA\Property(property="warranty_expiry", type="string", format="date"),
+     *             @OA\Property(property="status", type="string", enum={"active", "in_repair", "retired"}, example="active", description="Asset status. If set to 'in_repair', a maintenance record will be automatically created."),
      *             @OA\Property(property="assigned_to_user_id", type="integer"),
      *             @OA\Property(property="assigned_to_location", type="string", example="Room 101"),
      *             @OA\Property(property="serial_number", type="string"),
@@ -179,6 +181,7 @@ class AssetController extends Controller
             'purchase_price' => 'required|numeric|min:0',
             'vendor' => 'nullable|string|max:255',
             'warranty_expiry' => 'nullable|date',
+            'status' => 'nullable|in:active,in_repair,retired',
             'assigned_to_user_id' => 'nullable|exists:users,id',
             'assigned_to_location' => 'nullable|string|max:255',
             'description' => 'nullable|string',
@@ -246,6 +249,8 @@ class AssetController extends Controller
                 throw new \Exception("Unable to generate unique asset code after {$maxAttempts} attempts. Please try again.");
             }
 
+            $assetStatus = $validated['status'] ?? 'active';
+            
             $asset = Asset::create([
                 'organization_id' => $organization->id,
                 'asset_code' => $assetCode,
@@ -255,7 +260,7 @@ class AssetController extends Controller
                 'purchase_price' => $validated['purchase_price'],
                 'vendor' => $validated['vendor'] ?? null,
                 'warranty_expiry' => $validated['warranty_expiry'] ?? null,
-                'status' => 'active',
+                'status' => $assetStatus,
                 'status_changed_at' => now(),
                 'assigned_to_user_id' => $validated['assigned_to_user_id'] ?? null,
                 'assigned_to_location' => $validated['assigned_to_location'] ?? null,
@@ -276,6 +281,20 @@ class AssetController extends Controller
                     'to_user_id' => $asset->assigned_to_user_id,
                     'to_location' => $asset->assigned_to_location,
                     'reason' => 'Initial assignment',
+                ]);
+            }
+
+            // Create maintenance record if status is "in_repair"
+            if ($assetStatus === 'in_repair') {
+                MaintenanceRecord::create([
+                    'organization_id' => $organization->id,
+                    'asset_id' => $asset->id,
+                    'user_id' => auth()->id(),
+                    'type' => 'repair',
+                    'scheduled_date' => now(),
+                    'status' => 'pending',
+                    'description' => 'Asset marked as in repair',
+                    'notes' => 'Automatically created when asset status was set to in_repair',
                 ]);
             }
 
@@ -375,13 +394,13 @@ class AssetController extends Controller
      *             @OA\Property(property="category", type="string"),
      *             @OA\Property(property="purchase_date", type="string", format="date"),
      *             @OA\Property(property="purchase_price", type="number", format="float"),
-     *             @OA\Property(property="status", type="string", enum={"active", "in_repair", "retired"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "in_repair", "retired"}, description="If changed to 'in_repair', a maintenance record will be automatically created (unless one already exists in progress)."),
      *             @OA\Property(property="status_change_reason", type="string"),
      *             @OA\Property(property="assigned_to_user_id", type="integer"),
      *             @OA\Property(property="assigned_to_location", type="string")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Asset updated successfully")
+     *     @OA\Response(response=200, description="Asset updated successfully. If status was changed to 'in_repair', a maintenance record is automatically created.")
      * )
      */
     public function update(Request $request, Asset $asset)
@@ -419,7 +438,9 @@ class AssetController extends Controller
         DB::beginTransaction();
         try {
             // Track status change
-            $statusChanged = $asset->status !== $validated['status'];
+            $oldStatus = $asset->status;
+            $newStatus = $validated['status'];
+            $statusChanged = $oldStatus !== $newStatus;
             $assignmentChanged = $asset->assigned_to_user_id != ($validated['assigned_to_user_id'] ?? null) ||
                                  $asset->assigned_to_location != ($validated['assigned_to_location'] ?? null);
 
@@ -443,6 +464,29 @@ class AssetController extends Controller
                     'to_location' => $asset->assigned_to_location,
                     'reason' => 'Asset updated',
                 ]);
+            }
+
+            // Create maintenance record if status changed to "in_repair"
+            if ($statusChanged && $newStatus === 'in_repair') {
+                // Check if there's already a pending maintenance record for this asset
+                $existingMaintenance = MaintenanceRecord::where('asset_id', $asset->id)
+                    ->where('status', 'pending')
+                    ->where('type', 'repair')
+                    ->first();
+
+                // Only create if there's no existing pending repair record
+                if (!$existingMaintenance) {
+                    MaintenanceRecord::create([
+                        'organization_id' => $organization->id,
+                        'asset_id' => $asset->id,
+                        'user_id' => auth()->id(),
+                        'type' => 'repair',
+                        'scheduled_date' => now(),
+                        'status' => 'pending',
+                        'description' => 'Asset marked as in repair',
+                        'notes' => 'Automatically created when asset status was changed to in_repair',
+                    ]);
+                }
             }
 
             DB::commit();

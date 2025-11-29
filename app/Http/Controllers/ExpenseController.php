@@ -259,7 +259,7 @@ class ExpenseController extends Controller
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Expense details"),
-     *     @OA\Response(response=403, description="Unauthorized")
+     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
      * )
      */
     public function show(Expense $expense)
@@ -287,7 +287,7 @@ class ExpenseController extends Controller
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Expense edit form data"),
-     *     @OA\Response(response=403, description="Unauthorized")
+     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
      * )
      */
     public function edit(Expense $expense)
@@ -336,7 +336,7 @@ class ExpenseController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Expense updated successfully. If non-admin edits an approved/rejected expense, approval status resets to pending.",
+     *         description="Expense updated successfully. If non-admin edits an expense, approval status is set to pending and requires admin approval.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Expense updated successfully. It is pending admin approval."),
@@ -347,7 +347,7 @@ class ExpenseController extends Controller
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Unauthorized")
+     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
      * )
      */
     public function update(Request $request, Expense $expense)
@@ -419,8 +419,8 @@ class ExpenseController extends Controller
             'receipt_path' => $validated['receipt_path'] ?? $expense->receipt_path,
         ];
 
-        // If non-admin edits, reset approval status
-        if (!$user->hasRole('admin') && $expense->approval_status !== 'pending') {
+        // If non-admin edits, always reset approval status to pending (requires admin approval)
+        if (!$user->hasRole('admin')) {
             $updateData['approval_status'] = 'pending';
             $updateData['approved_by'] = null;
             $updateData['approved_at'] = null;
@@ -443,20 +443,26 @@ class ExpenseController extends Controller
     /**
      * @OA\Delete(
      *     path="/api/expenses/{id}",
-     *     summary="Delete expense",
+     *     summary="Delete expense (Admin only)",
      *     tags={"Expenses"},
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Expense deleted successfully"),
-     *     @OA\Response(response=403, description="Unauthorized")
+     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
      * )
      */
     public function destroy(Expense $expense)
     {
-        $organization = auth()->user()->organization;
+        $user = auth()->user();
+        $organization = $user->organization;
         
         if (!$organization || $expense->organization_id !== $organization->id) {
             return $this->respondError('Unauthorized access.', 403);
+        }
+
+        // Only admin can delete expenses
+        if (!$user->hasRole('admin')) {
+            return $this->respondError('Only administrators can delete expenses.', 403);
         }
 
         // Delete receipt file if exists
@@ -479,7 +485,7 @@ class ExpenseController extends Controller
      *     security={{"sanctum": {}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Expense approved successfully"),
-     *     @OA\Response(response=403, description="Unauthorized")
+     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
      * )
      */
     public function approve(Expense $expense)
@@ -523,7 +529,7 @@ class ExpenseController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=200, description="Expense rejected successfully"),
-     *     @OA\Response(response=403, description="Unauthorized")
+     *     @OA\Response(response=403, description="Unauthorized - Only administrators can delete expenses")
      * )
      */
     public function reject(Request $request, Expense $expense)
