@@ -99,36 +99,32 @@ if ($user) {
           
           // Check role-based visibility
           if (isset($menu->roles) && $user) {
-            $showMenu = false;
-            foreach ($menu->roles as $role) {
-              if ($user->hasRole($role)) {
-                $showMenu = true;
-                break;
+            // Special handling for Super Admin: only show items with ONLY super_admin role
+            if ($user->isSuperAdmin()) {
+              // Super Admin should only see menu items that have ONLY super_admin role
+              $showMenu = count($menu->roles) === 1 && $menu->roles[0] === 'super_admin';
+            } else {
+              // Regular users: check if they have any of the required roles
+              $showMenu = false;
+              foreach ($menu->roles as $role) {
+                if ($user->hasRole($role)) {
+                  $showMenu = true;
+                  break;
+                }
               }
-            }
-            
-            // Special case: "View Only" menu items should ONLY be visible to general_staff
-            // Super Admin should NOT see these items
-            if (isset($menu->slug) && strpos($menu->slug, 'view.') === 0) {
-              if ($user->isSuperAdmin()) {
-                $showMenu = false;
-              } else {
-                // Only show if user is general_staff
+              
+              // Special case: "View Only" menu items should ONLY be visible to general_staff
+              if (isset($menu->slug) && strpos($menu->slug, 'view.') === 0) {
                 $showMenu = $user->hasRole('general_staff');
               }
             }
           } elseif (isset($menu->role) && $user) {
             // Backward compatibility with single role
-            $showMenu = $user->hasRole($menu->role);
-          }
-          
-          // Super admin can see everything EXCEPT "View Only" items
-          if ($user && $user->isSuperAdmin()) {
-            // Don't show "View Only" items to Super Admin
-            if (!isset($menu->slug) || strpos($menu->slug, 'view.') !== 0) {
-              $showMenu = true;
+            if ($user->isSuperAdmin()) {
+              // Super Admin should only see items with super_admin role
+              $showMenu = $menu->role === 'super_admin';
             } else {
-              $showMenu = false;
+              $showMenu = $user->hasRole($menu->role);
             }
           }
           
@@ -152,11 +148,14 @@ if ($user) {
       foreach ($navHeaders as $navHeaderIndex => $navHeader) {
         $hasVisibleItems = false;
         
-        // Special case: "View Only" navheader should only show for general_staff
-        if (isset($navHeader->navheader) && $navHeader->navheader === 'View Only') {
-          if ($user && $user->isSuperAdmin()) {
-            $hasVisibleItems = false; // Super Admin should not see "View Only" section
-          } else {
+        // For Super Admin: navheaders should only show if they have super_admin-only items
+        if ($user && $user->isSuperAdmin()) {
+          // Super Admin should not see any navheaders (only standalone items like Organizations)
+          $hasVisibleItems = false;
+        } else {
+          // Regular users: check if navheader has visible items
+          // Special case: "View Only" navheader should only show for general_staff
+          if (isset($navHeader->navheader) && $navHeader->navheader === 'View Only') {
             // Check if user is general_staff
             if ($user && $user->hasRole('general_staff')) {
               // Check if any menu items under this navheader are visible
@@ -169,14 +168,14 @@ if ($user) {
                 }
               }
             }
-          }
-        } else {
-          // Check if any menu items under this navheader are visible
-          if (isset($menuItemMap[$navHeaderIndex])) {
-            foreach ($menuItemMap[$navHeaderIndex] as $item) {
-              if ($item->shouldShow) {
-                $hasVisibleItems = true;
-                break;
+          } else {
+            // Check if any menu items under this navheader are visible
+            if (isset($menuItemMap[$navHeaderIndex])) {
+              foreach ($menuItemMap[$navHeaderIndex] as $item) {
+                if ($item->shouldShow) {
+                  $hasVisibleItems = true;
+                  break;
+                }
               }
             }
           }
