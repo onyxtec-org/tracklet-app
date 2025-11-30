@@ -82,9 +82,9 @@
                                 <div class="row">
                                     <div class="col-lg-6 col-sm-12">
                                         <div class="form-group">
-                                            <label class="form-label" for="name">Name</label>
+                                            <label class="form-label" for="name">Name <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" id="name" name="name"
-                                                placeholder="John Doe" value="{{ old('name', $user->name) }}" />
+                                                placeholder="John Doe" value="{{ old('name', $user->name) }}" required />
                                         </div>
                                     </div>
                                     <div class="col-lg-6 col-sm-12">

@@ -40,8 +40,8 @@
         <form class="auth-login-form mt-2" method="POST" action="{{ route('login') }}">
           @csrf
           <div class="form-group">
-            <label for="login-email" class="form-label">Email</label>
-            <input type="text" class="form-control @error('email') is-invalid @enderror" id="login-email" name="email" placeholder="john@example.com" aria-describedby="login-email" tabindex="1" autofocus value="{{ old('email') }}" />
+            <label for="login-email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input type="text" class="form-control @error('email') is-invalid @enderror" id="login-email" name="email" placeholder="john@example.com" aria-describedby="login-email" tabindex="1" autofocus value="{{ old('email') }}" required />
             @error('email')
             <span class="invalid-feedback" role="alert">
               <strong>{{ $message }}</strong>
@@ -50,9 +50,9 @@
           </div>
 
           <div class="form-group">
-            <label for="login-password">Password</label>
+            <label for="login-password">Password <span class="text-danger">*</span></label>
             <div class="input-group input-group-merge form-password-toggle">
-              <input type="password" class="form-control form-control-merge" id="login-password" name="password" tabindex="2" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="login-password" />
+              <input type="password" class="form-control form-control-merge" id="login-password" name="password" tabindex="2" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="login-password" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>

@@ -42,7 +42,7 @@
         <form class="auth-register-form mt-2" method="POST" action="<?php echo e(route('organization.register')); ?>">
           <?php echo csrf_field(); ?>
           <div class="form-group">
-            <label for="organization_name" class="form-label">Organization Name</label>
+            <label for="organization_name" class="form-label">Organization Name <span class="text-danger">*</span></label>
             <input type="text" class="form-control <?php $__errorArgs = ['organization_name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -50,7 +50,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" id="organization_name" name="organization_name" placeholder="Acme Corporation" aria-describedby="organization_name" tabindex="1" autofocus value="<?php echo e(old('organization_name')); ?>" />
+unset($__errorArgs, $__bag); ?>" id="organization_name" name="organization_name" placeholder="Acme Corporation" aria-describedby="organization_name" tabindex="1" autofocus value="<?php echo e(old('organization_name')); ?>" required />
             <?php $__errorArgs = ['organization_name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -65,7 +65,7 @@ endif;
 unset($__errorArgs, $__bag); ?>
           </div>
           <div class="form-group">
-            <label for="name" class="form-label">Full Name</label>
+            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
             <input type="text" class="form-control <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -73,7 +73,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" id="name" name="name" placeholder="John Doe" aria-describedby="name" tabindex="2" value="<?php echo e(old('name')); ?>" />
+unset($__errorArgs, $__bag); ?>" id="name" name="name" placeholder="John Doe" aria-describedby="name" tabindex="2" value="<?php echo e(old('name')); ?>" required />
             <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -88,7 +88,7 @@ endif;
 unset($__errorArgs, $__bag); ?>
           </div>
           <div class="form-group">
-            <label for="email" class="form-label">Email</label>
+            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
             <input type="text" class="form-control <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -96,7 +96,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" id="email" name="email" placeholder="admin@example.com" aria-describedby="email" tabindex="3" value="<?php echo e(old('email')); ?>" />
+unset($__errorArgs, $__bag); ?>" id="email" name="email" placeholder="admin@example.com" aria-describedby="email" tabindex="3" value="<?php echo e(old('email')); ?>" required />
             <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -112,7 +112,7 @@ unset($__errorArgs, $__bag); ?>
             <small class="form-text text-muted">This will be your login email and organization contact email.</small>
           </div>
           <div class="form-group">
-            <label for="password" class="form-label">Password</label>
+            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
             <div class="input-group input-group-merge form-password-toggle">
               <input type="password" class="form-control form-control-merge <?php $__errorArgs = ['password'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -121,7 +121,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" id="password" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" tabindex="4" />
+unset($__errorArgs, $__bag); ?>" id="password" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" tabindex="4" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>
@@ -141,9 +141,9 @@ unset($__errorArgs, $__bag); ?>
             <small class="form-text text-muted">Minimum 8 characters</small>
           </div>
           <div class="form-group">
-            <label for="password_confirmation" class="form-label">Confirm Password</label>
+            <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
             <div class="input-group input-group-merge form-password-toggle">
-              <input type="password" class="form-control form-control-merge" id="password_confirmation" name="password_confirmation" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password_confirmation" tabindex="5" />
+              <input type="password" class="form-control form-control-merge" id="password_confirmation" name="password_confirmation" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password_confirmation" tabindex="5" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>

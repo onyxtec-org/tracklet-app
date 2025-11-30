@@ -78,8 +78,8 @@
         <form class="auth-forgot-password-form mt-2" method="POST" action="{{ route('password.email') }}">
           @csrf
           <div class="form-group">
-            <label for="forgot-password-email" class="form-label">Email</label>
-            <input type="text" class="form-control @error('email') is-invalid @enderror" id="forgot-password-email" name="email" value="{{ old('email') }}" placeholder="john@example.com" aria-describedby="forgot-password-email" tabindex="1" autofocus />
+            <label for="forgot-password-email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input type="text" class="form-control @error('email') is-invalid @enderror" id="forgot-password-email" name="email" value="{{ old('email') }}" placeholder="john@example.com" aria-describedby="forgot-password-email" tabindex="1" autofocus required />
              @error('email')
               <span class="invalid-feedback" role="alert">
                 <strong>{{ $message }}</strong>

@@ -23,8 +23,8 @@
         <form class="auth-register-form mt-2" method="POST" action="{{ route('register') }}">
           @csrf
           <div class="form-group">
-            <label for="register-username" class="form-label">Username</label>
-            <input type="text" class="form-control @error('name') is-invalid @enderror" id="register-username" name="name" placeholder="johndoe" aria-describedby="register-username" tabindex="1" autofocus value="{{ old('name') }}" />
+            <label for="register-username" class="form-label">Username <span class="text-danger">*</span></label>
+            <input type="text" class="form-control @error('name') is-invalid @enderror" id="register-username" name="name" placeholder="johndoe" aria-describedby="register-username" tabindex="1" autofocus value="{{ old('name') }}" required />
             @error('name')
             <span class="invalid-feedback" role="alert">
               <strong>{{ $message }}</strong>
@@ -32,8 +32,8 @@
             @enderror
           </div>
           <div class="form-group">
-            <label for="register-email" class="form-label">Email</label>
-            <input type="text" class="form-control @error('email') is-invalid @enderror" id="register-email" name="email" placeholder="john@example.com" aria-describedby="register-email" tabindex="2" value="{{ old('email') }}" />
+            <label for="register-email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input type="text" class="form-control @error('email') is-invalid @enderror" id="register-email" name="email" placeholder="john@example.com" aria-describedby="register-email" tabindex="2" value="{{ old('email') }}" required />
             @error('name')
             <span class="invalid-feedback" role="alert">
               <strong>{{ $message }}</strong>
@@ -42,10 +42,10 @@
           </div>
 
           <div class="form-group">
-            <label for="register-password" class="form-label">Password</label>
+            <label for="register-password" class="form-label">Password <span class="text-danger">*</span></label>
 
             <div class="input-group input-group-merge form-password-toggle @error('password') is-invalid @enderror">
-              <input type="password" class="form-control form-control-merge @error('password') is-invalid @enderror" id="register-password" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="register-password" tabindex="3" />
+              <input type="password" class="form-control form-control-merge @error('password') is-invalid @enderror" id="register-password" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="register-password" tabindex="3" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>
@@ -58,10 +58,10 @@
           </div>
 
           <div class="form-group">
-            <label for="register-password-confirm" class="form-label">Confirm Password</label>
+            <label for="register-password-confirm" class="form-label">Confirm Password <span class="text-danger">*</span></label>
 
             <div class="input-group input-group-merge form-password-toggle">
-              <input type="password" class="form-control form-control-merge" id="register-password-confirm" name="password_confirmation" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="register-password" tabindex="3" />
+              <input type="password" class="form-control form-control-merge" id="register-password-confirm" name="password_confirmation" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="register-password" tabindex="3" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>

@@ -44,8 +44,8 @@
         <form class="auth-register-form mt-2" method="POST" action="{{ route('organization.register') }}">
           @csrf
           <div class="form-group">
-            <label for="organization_name" class="form-label">Organization Name</label>
-            <input type="text" class="form-control @error('organization_name') is-invalid @enderror" id="organization_name" name="organization_name" placeholder="Acme Corporation" aria-describedby="organization_name" tabindex="1" autofocus value="{{ old('organization_name') }}" />
+            <label for="organization_name" class="form-label">Organization Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control @error('organization_name') is-invalid @enderror" id="organization_name" name="organization_name" placeholder="Acme Corporation" aria-describedby="organization_name" tabindex="1" autofocus value="{{ old('organization_name') }}" required />
             @error('organization_name')
             <span class="invalid-feedback" role="alert">
               <strong>{{ $message }}</strong>
@@ -53,8 +53,8 @@
             @enderror
           </div>
           <div class="form-group">
-            <label for="name" class="form-label">Full Name</label>
-            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" placeholder="John Doe" aria-describedby="name" tabindex="2" value="{{ old('name') }}" />
+            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" placeholder="John Doe" aria-describedby="name" tabindex="2" value="{{ old('name') }}" required />
             @error('name')
             <span class="invalid-feedback" role="alert">
               <strong>{{ $message }}</strong>
@@ -62,8 +62,8 @@
             @enderror
           </div>
           <div class="form-group">
-            <label for="email" class="form-label">Email</label>
-            <input type="text" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="admin@example.com" aria-describedby="email" tabindex="3" value="{{ old('email') }}" />
+            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input type="text" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="admin@example.com" aria-describedby="email" tabindex="3" value="{{ old('email') }}" required />
             @error('email')
             <span class="invalid-feedback" role="alert">
               <strong>{{ $message }}</strong>
@@ -72,9 +72,9 @@
             <small class="form-text text-muted">This will be your login email and organization contact email.</small>
           </div>
           <div class="form-group">
-            <label for="password" class="form-label">Password</label>
+            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
             <div class="input-group input-group-merge form-password-toggle">
-              <input type="password" class="form-control form-control-merge @error('password') is-invalid @enderror" id="password" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" tabindex="4" />
+              <input type="password" class="form-control form-control-merge @error('password') is-invalid @enderror" id="password" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" tabindex="4" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>
@@ -87,9 +87,9 @@
             <small class="form-text text-muted">Minimum 8 characters</small>
           </div>
           <div class="form-group">
-            <label for="password_confirmation" class="form-label">Confirm Password</label>
+            <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
             <div class="input-group input-group-merge form-password-toggle">
-              <input type="password" class="form-control form-control-merge" id="password_confirmation" name="password_confirmation" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password_confirmation" tabindex="5" />
+              <input type="password" class="form-control form-control-merge" id="password_confirmation" name="password_confirmation" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password_confirmation" tabindex="5" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>

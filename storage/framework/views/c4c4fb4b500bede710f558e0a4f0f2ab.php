@@ -38,7 +38,7 @@
         <form class="auth-login-form mt-2" method="POST" action="<?php echo e(route('login')); ?>">
           <?php echo csrf_field(); ?>
           <div class="form-group">
-            <label for="login-email" class="form-label">Email</label>
+            <label for="login-email" class="form-label">Email <span class="text-danger">*</span></label>
             <input type="text" class="form-control <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -46,7 +46,7 @@ if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" id="login-email" name="email" placeholder="john@example.com" aria-describedby="login-email" tabindex="1" autofocus value="<?php echo e(old('email')); ?>" />
+unset($__errorArgs, $__bag); ?>" id="login-email" name="email" placeholder="john@example.com" aria-describedby="login-email" tabindex="1" autofocus value="<?php echo e(old('email')); ?>" required />
             <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -62,9 +62,9 @@ unset($__errorArgs, $__bag); ?>
           </div>
 
           <div class="form-group">
-            <label for="login-password">Password</label>
+            <label for="login-password">Password <span class="text-danger">*</span></label>
             <div class="input-group input-group-merge form-password-toggle">
-              <input type="password" class="form-control form-control-merge" id="login-password" name="password" tabindex="2" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="login-password" />
+              <input type="password" class="form-control form-control-merge" id="login-password" name="password" tabindex="2" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="login-password" required />
               <div class="input-group-append">
                 <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
               </div>
